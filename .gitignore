@@ -1,2 +1,19 @@
+.project
+.settings
+
+# used by the Makefile
+/build/_workspace/
+/build/bin/
+
+# travis
+profile.tmp
+profile.cov
+
+# codecov
+coverage.txt
+
 # IdeaIDE
 .idea
+
+# VS Code
+.vscode
