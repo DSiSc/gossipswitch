@@ -6,6 +6,14 @@ import (
 	"sync/atomic"
 )
 
+// SwitchType switch type
+type SwitchType int
+
+const (
+	TxSwitch SwitchType = iota
+	BlockSwitch
+)
+
 // SwitchMsg is the message that can be dealt with by GossipSwitch.
 type SwitchMsg interface {
 }
@@ -44,6 +52,27 @@ func NewGossipSwitch(filter SwitchFilter) *GossipSwitch {
 	}
 	sw.initPort()
 	return sw
+}
+
+// NewGossipSwitchByType create a new switch instance by type.
+// switchType is used to specify the switch type
+func NewGossipSwitchByType(switchType SwitchType) (*GossipSwitch, error) {
+	var filter SwitchFilter
+	switch switchType {
+	case TxSwitch:
+		filter = NewTxFilter()
+	case BlockSwitch:
+		filter = NewBlockFilter()
+	default:
+		return nil, errors.New("unsupported switch type")
+	}
+	sw := &GossipSwitch{
+		filter:   filter,
+		inPorts:  make(map[int]*InPort),
+		outPorts: make(map[int]*OutPort),
+	}
+	sw.initPort()
+	return sw, nil
 }
 
 // init switch's InPort and OutPort

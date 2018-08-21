@@ -21,6 +21,15 @@ func Test_NewGossipSwitch(t *testing.T) {
 	assert.NotNil(sw, "FAILED: failed to create GossipSwitch")
 }
 
+// Test new a gossipsiwtch by type
+func Test_NewGossipSwitchByType(t *testing.T) {
+	assert := assert.New(t)
+	var _, err = NewGossipSwitchByType(TxSwitch)
+	assert.Nil(err, "FAILED: failed to create GossipSwitch")
+	_, err = NewGossipSwitchByType(BlockSwitch)
+	assert.Nil(err, "FAILED: failed to create GossipSwitch")
+}
+
 // Test get switch in port by id
 func Test_InPort(t *testing.T) {
 	assert := assert.New(t)
