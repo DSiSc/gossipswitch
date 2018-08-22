@@ -2,7 +2,7 @@ package gossipswitch
 
 import (
 	"errors"
-	"github.com/DSiSc/txpool/core/types"
+	"github.com/DSiSc/txpool/types"
 )
 
 // TxFilter is an implemention of switch message filter,

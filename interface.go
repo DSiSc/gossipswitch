@@ -1,5 +1,6 @@
 package gossipswitch
 
+// GossipSwitchAPI is gossipswitch's public api.
 type GossipSwitchAPI interface {
 	// NewGossipSwitch create a new switch instance with given filter.
 	// filter is used to verify the received message

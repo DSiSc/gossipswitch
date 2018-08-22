@@ -1,7 +1,7 @@
 package gossipswitch
 
 import (
-	"github.com/DSiSc/txpool/core/types"
+	"github.com/DSiSc/txpool/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
