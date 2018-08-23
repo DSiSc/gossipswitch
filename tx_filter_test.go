@@ -1,8 +1,7 @@
 package gossipswitch
 
 import (
-	"github.com/DSiSc/producer/common"
-	"github.com/DSiSc/txpool/types"
+	"github.com/DSiSc/craft/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -23,6 +22,6 @@ func Test_TxFilterVerify(t *testing.T) {
 	tx := &types.Transaction{}
 	assert.Nil(txFilter.Verify(tx), "PASS: verify validated message")
 
-	block := &common.Block{}
+	block := &types.Block{}
 	assert.NotNil(txFilter.Verify(block), "PASS: verify in validated message")
 }
