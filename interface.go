@@ -2,14 +2,6 @@ package gossipswitch
 
 // GossipSwitchAPI is gossipswitch's public api.
 type GossipSwitchAPI interface {
-	// NewGossipSwitch create a new switch instance with given filter.
-	// filter is used to verify the received message
-	NewGossipSwitch(filter SwitchFilter) *GossipSwitch
-
-	// NewGossipSwitchByType create a new switch instance by type.
-	// switchType is used to specify the switch type
-	NewGossipSwitchByType(switchType SwitchType) (*GossipSwitch, error)
-
 	// InPort get switch's in port by port id, return nil if there is no port with specific id.
 	InPort(portId int) *InPort
 
