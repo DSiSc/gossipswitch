@@ -2,7 +2,6 @@ package gossipswitch
 
 import (
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/gossipswitch/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -52,7 +51,7 @@ func TestOutPort_BindToPort(t *testing.T) {
 	var outPort = newOutPort()
 	assert.NotNil(outPort, "FAILED: failed to create OutPort")
 
-	outPutFunc := func(msg common.SwitchMsg) error {
+	outPutFunc := func(msg interface{}) error {
 		return nil
 	}
 	outPort.BindToPort(outPutFunc)
@@ -69,8 +68,8 @@ func TestOutPort_Write(t *testing.T) {
 	var outPort = newOutPort()
 	assert.NotNil(outPort, "FAILED: failed to create OutPort")
 
-	var recvMsgChan = make(chan common.SwitchMsg)
-	outPutFunc := func(msg common.SwitchMsg) error {
+	var recvMsgChan = make(chan interface{})
+	outPutFunc := func(msg interface{}) error {
 		recvMsgChan <- msg
 		return nil
 	}

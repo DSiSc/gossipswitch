@@ -6,7 +6,6 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/evm-NG"
-	"github.com/DSiSc/gossipswitch/common"
 )
 
 // TxFilter is an implemention of switch message filter,
@@ -21,7 +20,7 @@ func NewBlockFilter() *BlockFilter {
 
 // Verify verify a switch message whether is validated.
 // return nil if message is validated, otherwise return relative error
-func (blockValidator *BlockFilter) Verify(msg common.SwitchMsg) error {
+func (blockValidator *BlockFilter) Verify(msg interface{}) error {
 	var err error
 	switch msg := msg.(type) {
 	case *types.Block:

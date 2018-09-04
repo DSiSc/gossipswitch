@@ -2,7 +2,6 @@ package gossipswitch
 
 import (
 	"errors"
-	"github.com/DSiSc/gossipswitch/common"
 	"github.com/DSiSc/gossipswitch/filter"
 	"github.com/DSiSc/gossipswitch/filter/block"
 	"github.com/DSiSc/gossipswitch/filter/transaction"
@@ -129,14 +128,14 @@ func (sw *GossipSwitch) receiveRoutine(inPort *InPort) {
 }
 
 // deal with the received message.
-func (sw *GossipSwitch) onRecvMsg(msg common.SwitchMsg) {
+func (sw *GossipSwitch) onRecvMsg(msg interface{}) {
 	if err := sw.filter.Verify(msg); err == nil {
 		sw.broadCastMsg(msg)
 	}
 }
 
 // broadcast the validated message to all out ports.
-func (sw *GossipSwitch) broadCastMsg(msg common.SwitchMsg) error {
+func (sw *GossipSwitch) broadCastMsg(msg interface{}) error {
 	for _, outPort := range sw.outPorts {
 		go outPort.write(msg)
 	}

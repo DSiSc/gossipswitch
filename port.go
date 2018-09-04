@@ -1,7 +1,6 @@
 package gossipswitch
 
 import (
-	"github.com/DSiSc/gossipswitch/common"
 	"sync"
 )
 
@@ -14,29 +13,29 @@ type state struct {
 // InPort is switch in port. Message will be send to InPort, and then switch read the message from InPort
 type InPort struct {
 	State   state
-	channel chan common.SwitchMsg
+	channel chan interface{}
 }
 
 // create a new in port instance
 func newInPort() *InPort {
 	return &InPort{
 		State:   state{},
-		channel: make(chan common.SwitchMsg),
+		channel: make(chan interface{}),
 	}
 }
 
 // Channel return the input channel of this InPort
-func (inPort *InPort) Channel() chan<- common.SwitchMsg {
+func (inPort *InPort) Channel() chan<- interface{} {
 	return inPort.channel
 }
 
 // read message from this InPort, will be blocked until the message arrives.
-func (inPort *InPort) read() <-chan common.SwitchMsg {
+func (inPort *InPort) read() <-chan interface{} {
 	return inPort.channel
 }
 
 // OutPutFunc is binded to switch out port, and OutPort will call OutPutFunc when receive a message from switch
-type OutPutFunc func(msg common.SwitchMsg) error
+type OutPutFunc func(msg interface{}) error
 
 // InPort is switch out port. Switch will broadcast message to out port
 type OutPort struct {
@@ -61,7 +60,7 @@ func (outPort *OutPort) BindToPort(outPutFunc OutPutFunc) error {
 }
 
 // write message to this OutPort
-func (outPort *OutPort) write(msg common.SwitchMsg) error {
+func (outPort *OutPort) write(msg interface{}) error {
 	outPort.outPortMtx.Lock()
 	defer outPort.outPortMtx.Unlock()
 	for _, outPutFunc := range outPort.outPutFuncs {
