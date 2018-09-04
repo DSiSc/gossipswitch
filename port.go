@@ -1,6 +1,9 @@
 package gossipswitch
 
-import "sync"
+import (
+	"github.com/DSiSc/gossipswitch/common"
+	"sync"
+)
 
 // state is used to record switch port state. e.g., message statistics
 type state struct {
@@ -11,29 +14,29 @@ type state struct {
 // InPort is switch in port. Message will be send to InPort, and then switch read the message from InPort
 type InPort struct {
 	State   state
-	channel chan SwitchMsg
+	channel chan common.SwitchMsg
 }
 
 // create a new in port instance
 func newInPort() *InPort {
 	return &InPort{
 		State:   state{},
-		channel: make(chan SwitchMsg),
+		channel: make(chan common.SwitchMsg),
 	}
 }
 
 // Channel return the input channel of this InPort
-func (inPort *InPort) Channel() chan<- SwitchMsg {
+func (inPort *InPort) Channel() chan<- common.SwitchMsg {
 	return inPort.channel
 }
 
 // read message from this InPort, will be blocked until the message arrives.
-func (inPort *InPort) read() <-chan SwitchMsg {
+func (inPort *InPort) read() <-chan common.SwitchMsg {
 	return inPort.channel
 }
 
 // OutPutFunc is binded to switch out port, and OutPort will call OutPutFunc when receive a message from switch
-type OutPutFunc func(msg SwitchMsg) error
+type OutPutFunc func(msg common.SwitchMsg) error
 
 // InPort is switch out port. Switch will broadcast message to out port
 type OutPort struct {
@@ -58,7 +61,7 @@ func (outPort *OutPort) BindToPort(outPutFunc OutPutFunc) error {
 }
 
 // write message to this OutPort
-func (outPort *OutPort) write(msg SwitchMsg) error {
+func (outPort *OutPort) write(msg common.SwitchMsg) error {
 	outPort.outPortMtx.Lock()
 	defer outPort.outPortMtx.Unlock()
 	for _, outPutFunc := range outPort.outPutFuncs {

@@ -1,8 +1,9 @@
-package gossipswitch
+package transaction
 
 import (
 	"errors"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/gossipswitch/common"
 )
 
 // TxFilter is an implemention of switch message filter,
@@ -17,7 +18,7 @@ func NewTxFilter() *TxFilter {
 
 // Verify verify a switch message whether is validated.
 // return nil if message is validated, otherwise return relative error
-func (txValidator *TxFilter) Verify(msg SwitchMsg) error {
+func (txValidator *TxFilter) Verify(msg common.SwitchMsg) error {
 	switch msg := msg.(type) {
 	case *types.Transaction:
 		return txValidator.doVerify(msg)

@@ -2,6 +2,7 @@ package gossipswitch
 
 import (
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/gossipswitch/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -10,7 +11,7 @@ import (
 type mockSwitchFiler struct {
 }
 
-func (filter *mockSwitchFiler) Verify(msg SwitchMsg) error {
+func (filter *mockSwitchFiler) Verify(msg common.SwitchMsg) error {
 	return nil
 }
 
@@ -90,10 +91,10 @@ func Test_onRecvMsg(t *testing.T) {
 	txMsg := &types.Transaction{}
 	sw.InPort(LocalInPortId).Channel() <- txMsg
 
-	recvMsgChan := make(chan SwitchMsg)
+	recvMsgChan := make(chan common.SwitchMsg)
 	// bind output func to switch out port
 	outPort := sw.OutPort(LocalOutPortId)
-	outPort.BindToPort(func(msg SwitchMsg) error {
+	outPort.BindToPort(func(msg common.SwitchMsg) error {
 		recvMsgChan <- msg
 		return nil
 	})

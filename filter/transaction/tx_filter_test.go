@@ -1,4 +1,4 @@
-package gossipswitch
+package transaction
 
 import (
 	"github.com/DSiSc/craft/types"

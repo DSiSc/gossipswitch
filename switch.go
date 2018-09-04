@@ -2,6 +2,10 @@ package gossipswitch
 
 import (
 	"errors"
+	"github.com/DSiSc/gossipswitch/common"
+	"github.com/DSiSc/gossipswitch/filter"
+	"github.com/DSiSc/gossipswitch/filter/block"
+	"github.com/DSiSc/gossipswitch/filter/transaction"
 	"sync"
 	"sync/atomic"
 )
@@ -13,15 +17,6 @@ const (
 	TxSwitch SwitchType = iota
 	BlockSwitch
 )
-
-// SwitchMsg is the message that can be dealt with by GossipSwitch.
-type SwitchMsg interface {
-}
-
-// Filter is used to verify SwitchMsg
-type SwitchFilter interface {
-	Verify(msg SwitchMsg) error
-}
 
 // common const value
 const (
@@ -36,7 +31,7 @@ const (
 // otherwise it will be dropped.
 type GossipSwitch struct {
 	switchMtx sync.Mutex
-	filter    SwitchFilter
+	filter    filter.SwitchFilter
 	inPorts   map[int]*InPort
 	outPorts  map[int]*OutPort
 	isRunning uint32 // atomic
@@ -44,7 +39,7 @@ type GossipSwitch struct {
 
 // NewGossipSwitch create a new switch instance with given filter.
 // filter is used to verify the received message
-func NewGossipSwitch(filter SwitchFilter) *GossipSwitch {
+func NewGossipSwitch(filter filter.SwitchFilter) *GossipSwitch {
 	sw := &GossipSwitch{
 		filter:   filter,
 		inPorts:  make(map[int]*InPort),
@@ -57,17 +52,17 @@ func NewGossipSwitch(filter SwitchFilter) *GossipSwitch {
 // NewGossipSwitchByType create a new switch instance by type.
 // switchType is used to specify the switch type
 func NewGossipSwitchByType(switchType SwitchType) (*GossipSwitch, error) {
-	var filter SwitchFilter
+	var msgFilter filter.SwitchFilter
 	switch switchType {
 	case TxSwitch:
-		filter = NewTxFilter()
+		msgFilter = transaction.NewTxFilter()
 	case BlockSwitch:
-		filter = NewBlockFilter()
+		msgFilter = block.NewBlockFilter()
 	default:
 		return nil, errors.New("unsupported switch type")
 	}
 	sw := &GossipSwitch{
-		filter:   filter,
+		filter:   msgFilter,
 		inPorts:  make(map[int]*InPort),
 		outPorts: make(map[int]*OutPort),
 	}
@@ -134,14 +129,14 @@ func (sw *GossipSwitch) receiveRoutine(inPort *InPort) {
 }
 
 // deal with the received message.
-func (sw *GossipSwitch) onRecvMsg(msg SwitchMsg) {
+func (sw *GossipSwitch) onRecvMsg(msg common.SwitchMsg) {
 	if err := sw.filter.Verify(msg); err == nil {
 		sw.broadCastMsg(msg)
 	}
 }
 
 // broadcast the validated message to all out ports.
-func (sw *GossipSwitch) broadCastMsg(msg SwitchMsg) error {
+func (sw *GossipSwitch) broadCastMsg(msg common.SwitchMsg) error {
 	for _, outPort := range sw.outPorts {
 		go outPort.write(msg)
 	}
