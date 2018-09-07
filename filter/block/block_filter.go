@@ -47,7 +47,7 @@ func doValidate(block *types.Block) error {
 	// verify block header hash
 	hash := HeaderHash(block.Header)
 	if hash != block.HeaderHash {
-		log.Error("Validate block failed, as actual block header hash is different with expected")
+		log.Error("Validate block failed, as actual block header hash %x is different with expected %x.", block.HeaderHash, hash)
 		return errors.New("invalidate block, as actual block header hash is different with expected")
 	}
 
