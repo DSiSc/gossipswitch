@@ -2,6 +2,7 @@ package gossipswitch
 
 import (
 	"errors"
+	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/gossipswitch/filter"
 	"github.com/DSiSc/gossipswitch/filter/block"
 	"github.com/DSiSc/gossipswitch/filter/transaction"
@@ -54,11 +55,14 @@ func NewGossipSwitchByType(switchType SwitchType) (*GossipSwitch, error) {
 	var msgFilter filter.SwitchFilter
 	switch switchType {
 	case TxSwitch:
+		log.Info("New transaction switch")
 		msgFilter = transaction.NewTxFilter()
 	case BlockSwitch:
+		log.Info("New block switch")
 		msgFilter = block.NewBlockFilter()
 	default:
-		return nil, errors.New("unsupported switch type")
+		log.Error("Unsupported switch type")
+		return nil, errors.New("Unsupported switch type ")
 	}
 	sw := &GossipSwitch{
 		filter:   msgFilter,
@@ -71,6 +75,7 @@ func NewGossipSwitchByType(switchType SwitchType) (*GossipSwitch, error) {
 
 // init switch's InPort and OutPort
 func (sw *GossipSwitch) initPort() {
+	log.Info("Init switch's ports")
 	sw.inPorts[LocalInPortId] = newInPort()
 	sw.inPorts[RemoteInPortId] = newInPort()
 	sw.outPorts[LocalOutPortId] = newOutPort()
@@ -90,20 +95,26 @@ func (sw *GossipSwitch) OutPort(portId int) *OutPort {
 // Start start the switch. Once started, switch will receive message from in port, and broadcast to
 // out port
 func (sw *GossipSwitch) Start() error {
+	log.Info("Begin starting switch")
 	if atomic.CompareAndSwapUint32(&sw.isRunning, 0, 1) {
 		for _, inPort := range sw.inPorts {
 			go sw.receiveRoutine(inPort)
 		}
+		log.Info("Start switch success")
 		return nil
 	}
+	log.Error("Switch already started")
 	return errors.New("switch already started")
 }
 
 // Stop stop the switch. Once stopped, switch will stop to receive and broadcast message
 func (sw *GossipSwitch) Stop() error {
+	log.Info("Begin stopping switch")
 	if atomic.CompareAndSwapUint32(&sw.isRunning, 1, 0) {
+		log.Info("Stop switch success")
 		return nil
 	}
+	log.Error("Switch already stopped")
 	return errors.New("switch already stopped")
 }
 
@@ -129,6 +140,7 @@ func (sw *GossipSwitch) receiveRoutine(inPort *InPort) {
 
 // deal with the received message.
 func (sw *GossipSwitch) onRecvMsg(msg interface{}) {
+	log.Debug("Received a message %v from InPort: %v", msg)
 	if err := sw.filter.Verify(msg); err == nil {
 		sw.broadCastMsg(msg)
 	}
@@ -136,6 +148,7 @@ func (sw *GossipSwitch) onRecvMsg(msg interface{}) {
 
 // broadcast the validated message to all out ports.
 func (sw *GossipSwitch) broadCastMsg(msg interface{}) error {
+	log.Debug("Broadcast message %v to OutPorts: %v", msg)
 	for _, outPort := range sw.outPorts {
 		go outPort.write(msg)
 	}
