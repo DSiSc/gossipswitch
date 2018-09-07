@@ -2,6 +2,6 @@
 # The following lines listed by git repositories(each line for one git repo) 
 # alone with compatible version(branch/tag/commit-id).
 
-github.com/DSiSc/craft:master
-github.com/DSiSc/blockchain:master
-github.com/DSiSc/evm-NG:master
+github.com/DSiSc/craft:v0.1
+github.com/DSiSc/blockchain:v0.1
+github.com/DSiSc/evm-NG:v0.1
