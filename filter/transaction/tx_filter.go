@@ -38,7 +38,7 @@ func (txValidator *TxFilter) doVerify(tx *types.Transaction) error {
 		log.Error("Get from by tx's signer failed with %v.", err)
 		return fmt.Errorf("Get from by tx's signer failed with %v ", err)
 	}
-	if bytes.Equal((*tx.Data.From)[:], from.Bytes()) {
+	if !bytes.Equal((*tx.Data.From)[:], from.Bytes()) {
 		log.Error("Transaction signature verify failed.")
 		return fmt.Errorf("Transaction signature verify failed ")
 	}
