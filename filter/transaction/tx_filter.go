@@ -7,7 +7,6 @@ import (
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	wallett "github.com/DSiSc/wallet/core/types"
-	"math/big"
 )
 
 // TxFilter is an implemention of switch message filter,
@@ -33,7 +32,7 @@ func (txValidator *TxFilter) Verify(msg interface{}) error {
 
 // do verify operation
 func (txValidator *TxFilter) doVerify(tx *types.Transaction) error {
-	signer := wallett.NewEIP155Signer(big.NewInt(18))
+	signer := new(wallett.FrontierSigner)
 	from, err := wallett.Sender(signer, tx)
 	if nil != err {
 		log.Error("Get from by tx's signer failed with %v.", err)
