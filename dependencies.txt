@@ -6,3 +6,5 @@ github.com/DSiSc/craft:master
 github.com/DSiSc/blockchain:master
 github.com/DSiSc/evm-NG:master
 github.com/DSiSc/wallet:master
+github.com/DSiSc/monkey:master
+github.com/DSiSc/validator:master

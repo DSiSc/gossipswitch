@@ -1,10 +1,14 @@
 package block
 
 import (
+	"errors"
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/blockchain/config"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/validator/worker"
 	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -56,10 +60,25 @@ func TestBlockFilter_Verify(t *testing.T) {
 	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
 
 	tx := &types.Transaction{}
-	assert.NotNil(blockFilter.Verify(tx), "PASS: verify validated message")
+	assert.NotNil(blockFilter.Verify(tx), "PASS: verify invalid message")
 
 	block := mockBlock()
-	assert.Nil(blockFilter.Verify(block), "PASS: verify in validated message")
+	var validateWorker *worker.Worker
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
+		return nil
+	})
+	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
+		return validateWorker
+	})
+	assert.Nil(blockFilter.Verify(block), "PASS: verify valid block")
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
+		return errors.New("invalid block")
+	})
+	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
+		return validateWorker
+	})
+	assert.NotNil(blockFilter.Verify(block), "PASS: verify invalid block")
 }
 
 type eventCenter struct {
