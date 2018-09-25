@@ -59,7 +59,7 @@ func doValidate(block *types.Block) error {
 	}
 
 	// write block to local database
-	go bc.WriteBlock(block)
+	go bc.WriteBlockWithReceipts(block, blockValidator.GetReceipts())
 	return nil
 }
 
