@@ -28,14 +28,6 @@ func HeaderHash(h *types.Header) (hash types.Hash) {
 	return
 }
 
-// calculate block's hash
-func BlockHash(block *types.Block) (hash types.Hash) {
-	jsonByte, _ := json.Marshal(block)
-	sumByte := Sum(jsonByte)
-	copy(hash[:], sumByte)
-	return
-}
-
 type RefAddress struct {
 	Addr types.Address
 }
