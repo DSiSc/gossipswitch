@@ -67,6 +67,9 @@ func TestBlockFilter_Verify(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
 		return nil
 	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *worker.Worker) types.Receipts {
+		return types.Receipts{}
+	})
 	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
 		return validateWorker
 	})

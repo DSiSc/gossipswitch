@@ -140,7 +140,7 @@ func (sw *GossipSwitch) receiveRoutine(inPort *InPort) {
 
 // deal with the received message.
 func (sw *GossipSwitch) onRecvMsg(msg interface{}) {
-	log.Debug("Received a message %v from InPort: %v", msg)
+	log.Debug("Received a message %v from InPort", msg)
 	if err := sw.filter.Verify(msg); err == nil {
 		sw.broadCastMsg(msg)
 	}
@@ -148,7 +148,7 @@ func (sw *GossipSwitch) onRecvMsg(msg interface{}) {
 
 // broadcast the validated message to all out ports.
 func (sw *GossipSwitch) broadCastMsg(msg interface{}) error {
-	log.Debug("Broadcast message %v to OutPorts: %v", msg)
+	log.Debug("Broadcast message %v to OutPorts", msg)
 	for _, outPort := range sw.outPorts {
 		go outPort.write(msg)
 	}

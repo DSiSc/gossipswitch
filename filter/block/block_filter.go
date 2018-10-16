@@ -41,7 +41,7 @@ func (blockValidator *BlockFilter) Verify(msg interface{}) error {
 
 // do verify operation
 func doValidate(block *types.Block) error {
-	log.Debug("Start to validate received block %v", block)
+	log.Debug("Start to validate received block %x", block.HeaderHash)
 	// retrieve previous world state
 	preBlkHash := block.Header.PrevBlockHash
 	bc, err := blockchain.NewBlockChainByBlockHash(preBlkHash)
