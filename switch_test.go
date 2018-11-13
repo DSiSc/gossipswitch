@@ -24,9 +24,9 @@ func Test_NewGossipSwitch(t *testing.T) {
 // Test new a gossipsiwtch by type
 func Test_NewGossipSwitchByType(t *testing.T) {
 	assert := assert.New(t)
-	var _, err = NewGossipSwitchByType(TxSwitch)
+	var _, err = NewGossipSwitchByType(TxSwitch, &eventCenter{})
 	assert.Nil(err, "FAILED: failed to create GossipSwitch")
-	_, err = NewGossipSwitchByType(BlockSwitch)
+	_, err = NewGossipSwitchByType(BlockSwitch, &eventCenter{})
 	assert.Nil(err, "FAILED: failed to create GossipSwitch")
 }
 
@@ -116,4 +116,36 @@ func checkSwitchStatus(t *testing.T, err error, currentStatus uint32, expectStat
 	} else {
 		t.Log("PASS: succed starting switch")
 	}
+}
+
+type eventCenter struct {
+}
+
+// subscriber subscribe specified eventType with eventFunc
+func (*eventCenter) Subscribe(eventType types.EventType, eventFunc types.EventFunc) types.Subscriber {
+	return nil
+}
+
+// subscriber unsubscribe specified eventType
+func (*eventCenter) UnSubscribe(eventType types.EventType, subscriber types.Subscriber) (err error) {
+	return nil
+}
+
+// notify subscriber of eventType
+func (*eventCenter) Notify(eventType types.EventType, value interface{}) (err error) {
+	return nil
+}
+
+// notify specified eventFunc
+func (*eventCenter) NotifySubscriber(eventFunc types.EventFunc, value interface{}) {
+
+}
+
+// notify subscriber traversing all events
+func (*eventCenter) NotifyAll() (errs []error) {
+	return nil
+}
+
+// unsubscrible all event
+func (*eventCenter) UnSubscribeAll() {
 }

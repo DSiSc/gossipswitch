@@ -54,7 +54,7 @@ func newOutPort() *OutPort {
 
 // BindToPort bind a new OutPutFunc to this OutPort. Return error if bind failed
 func (outPort *OutPort) BindToPort(outPutFunc OutPutFunc) error {
-	log.Info("Bind OutPutFunc to OutPort %d")
+	log.Info("Bind OutPutFunc to OutPort")
 	outPort.outPortMtx.Lock()
 	defer outPort.outPortMtx.Unlock()
 	outPort.outPutFuncs = append(outPort.outPutFuncs, outPutFunc)

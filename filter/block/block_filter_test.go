@@ -16,7 +16,9 @@ import (
 // Test new BlockFiltercd .
 func Test_NewBlockFilter(t *testing.T) {
 	assert := assert.New(t)
-	var blockFilter = NewBlockFilter()
+	// init event center
+	eventCenter := mockEventCenter()
+	var blockFilter = NewBlockFilter(eventCenter)
 	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
 }
 
@@ -25,7 +27,8 @@ func mockBlock() *types.Block {
 	cfg := config.BlockChainConfig{
 		PluginName: blockchain.PLUGIN_MEMDB,
 	}
-	blockchain.InitBlockChain(cfg)
+	eventCenter := mockEventCenter()
+	blockchain.InitBlockChain(cfg, eventCenter)
 
 	bc, _ := blockchain.NewLatestStateBlockChain()
 	b := &types.Block{
@@ -54,9 +57,9 @@ func mockEventCenter() types.EventCenter {
 func TestBlockFilter_Verify(t *testing.T) {
 	assert := assert.New(t)
 	// init event center
-	types.GlobalEventCenter = mockEventCenter()
+	eventCenter := mockEventCenter()
 
-	var blockFilter = NewBlockFilter()
+	var blockFilter = NewBlockFilter(eventCenter)
 	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
 
 	tx := &types.Transaction{}

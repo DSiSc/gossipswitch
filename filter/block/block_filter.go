@@ -12,16 +12,19 @@ import (
 // TxFilter is an implemention of switch message filter,
 // switch will use transaction filter to verify transaction message.
 type BlockFilter struct {
+	eventCenter types.EventCenter
 }
 
 // create a new block filter instance.
-func NewBlockFilter() *BlockFilter {
-	return &BlockFilter{}
+func NewBlockFilter(eventCenter types.EventCenter) *BlockFilter {
+	return &BlockFilter{
+		eventCenter,
+	}
 }
 
 // Verify verify a switch message whether is validated.
 // return nil if message is validated, otherwise return relative error
-func (blockValidator *BlockFilter) Verify(msg interface{}) error {
+func (filter *BlockFilter) Verify(msg interface{}) error {
 	var err error
 	switch msg := msg.(type) {
 	case *types.Block:
@@ -34,7 +37,7 @@ func (blockValidator *BlockFilter) Verify(msg interface{}) error {
 	//send verification failed event
 	if err != nil {
 		log.Debug("Send message verification failed event")
-		types.GlobalEventCenter.Notify(types.EventBlockVerifyFailed, err)
+		filter.eventCenter.Notify(types.EventBlockVerifyFailed, err)
 	}
 	return err
 }

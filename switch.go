@@ -3,6 +3,7 @@ package gossipswitch
 import (
 	"errors"
 	"github.com/DSiSc/craft/log"
+	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/gossipswitch/filter"
 	"github.com/DSiSc/gossipswitch/filter/block"
 	"github.com/DSiSc/gossipswitch/filter/transaction"
@@ -51,7 +52,7 @@ func NewGossipSwitch(filter filter.SwitchFilter) *GossipSwitch {
 
 // NewGossipSwitchByType create a new switch instance by type.
 // switchType is used to specify the switch type
-func NewGossipSwitchByType(switchType SwitchType) (*GossipSwitch, error) {
+func NewGossipSwitchByType(switchType SwitchType, eventCenter types.EventCenter) (*GossipSwitch, error) {
 	var msgFilter filter.SwitchFilter
 	switch switchType {
 	case TxSwitch:
@@ -59,7 +60,7 @@ func NewGossipSwitchByType(switchType SwitchType) (*GossipSwitch, error) {
 		msgFilter = transaction.NewTxFilter()
 	case BlockSwitch:
 		log.Info("New block switch")
-		msgFilter = block.NewBlockFilter()
+		msgFilter = block.NewBlockFilter(eventCenter)
 	default:
 		log.Error("Unsupported switch type")
 		return nil, errors.New("Unsupported switch type ")
