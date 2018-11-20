@@ -87,6 +87,29 @@ func TestBlockFilter_Verify(t *testing.T) {
 	assert.NotNil(blockFilter.Verify(block), "PASS: verify invalid block")
 }
 
+func TestBlockFilter_Verify2(t *testing.T) {
+	assert := assert.New(t)
+	// init event center
+	eventCenter := mockEventCenter()
+
+	var blockFilter = NewBlockFilter(eventCenter)
+	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
+
+	block := mockBlock()
+	block.Header.Height = 123
+	var validateWorker *worker.Worker
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
+		return nil
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *worker.Worker) types.Receipts {
+		return types.Receipts{}
+	})
+	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
+		return validateWorker
+	})
+	assert.NotNil(blockFilter.Verify(block), "PASS: verify invalid block")
+}
+
 type eventCenter struct {
 }
 

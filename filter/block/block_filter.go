@@ -1,6 +1,7 @@
 package block
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/DSiSc/blockchain"
@@ -45,6 +46,14 @@ func (filter *BlockFilter) Verify(msg interface{}) error {
 // do verify operation
 func doValidate(block *types.Block) error {
 	log.Debug("Start to validate received block %x", block.HeaderHash)
+
+	// verify block header hash
+	blockHash := HeaderHash(block.Header)
+	if !bytes.Equal(blockHash[:], block.HeaderHash[:]) {
+		log.Error("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
+		return fmt.Errorf("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
+	}
+
 	// retrieve previous world state
 	preBlkHash := block.Header.PrevBlockHash
 	bc, err := blockchain.NewBlockChainByBlockHash(preBlkHash)
