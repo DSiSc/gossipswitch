@@ -62,6 +62,12 @@ func doValidate(block *types.Block) error {
 		return fmt.Errorf("failed to get previous block state, as:%v", err)
 	}
 
+	currentHeight := bc.GetCurrentBlockHeight()
+	if currentHeight >= block.Header.Height {
+		log.Error("Local block height %d is bigger than received block %x, height: %d", currentHeight, blockHash, block.Header.Height)
+		return fmt.Errorf("Local block height %d is bigger than received block %x, height: %d ", currentHeight, blockHash, block.Header.Height)
+	}
+
 	// verify block
 	blockValidator := getValidateWorker(bc, block)
 	err = blockValidator.VerifyBlock()
