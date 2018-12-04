@@ -7,24 +7,28 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
+	"sync"
 )
 
 // TxFilter is an implemention of switch message filter,
 // switch will use transaction filter to verify transaction message.
 type BlockFilter struct {
 	eventCenter types.EventCenter
+	lock        sync.Mutex
 }
 
 // create a new block filter instance.
 func NewBlockFilter(eventCenter types.EventCenter) *BlockFilter {
 	return &BlockFilter{
-		eventCenter,
+		eventCenter: eventCenter,
 	}
 }
 
 // Verify verify a switch message whether is validated.
 // return nil if message is validated, otherwise return relative error
 func (filter *BlockFilter) Verify(portId int, msg interface{}) error {
+	filter.lock.Lock()
+	defer filter.lock.Unlock()
 	var err error
 	switch msg := msg.(type) {
 	case *types.Block:
