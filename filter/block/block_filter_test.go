@@ -5,6 +5,7 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/blockchain/config"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/gossipswitch/port"
 	"github.com/DSiSc/monkey"
 	"github.com/DSiSc/validator/worker"
 	"github.com/stretchr/testify/assert"
@@ -55,6 +56,7 @@ func mockEventCenter() types.EventCenter {
 
 // Test verify block message.
 func TestBlockFilter_Verify(t *testing.T) {
+	defer monkey.UnpatchAll()
 	assert := assert.New(t)
 	// init event center
 	eventCenter := mockEventCenter()
@@ -63,7 +65,8 @@ func TestBlockFilter_Verify(t *testing.T) {
 	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
 
 	tx := &types.Transaction{}
-	assert.NotNil(blockFilter.Verify(tx), "PASS: verify invalid message")
+	assert.NotNil(blockFilter.Verify(port.LocalInPortId, tx), "PASS: verify invalid message")
+	assert.NotNil(blockFilter.Verify(port.RemoteInPortId, tx), "PASS: verify invalid message")
 
 	block := mockBlock()
 	var validateWorker *worker.Worker
@@ -76,7 +79,8 @@ func TestBlockFilter_Verify(t *testing.T) {
 	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
 		return validateWorker
 	})
-	assert.Nil(blockFilter.Verify(block), "PASS: verify valid block")
+	assert.Nil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify valid block")
+	assert.Nil(blockFilter.Verify(port.RemoteInPortId, block), "PASS: verify valid block")
 
 	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
 		return errors.New("invalid block")
@@ -84,10 +88,12 @@ func TestBlockFilter_Verify(t *testing.T) {
 	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
 		return validateWorker
 	})
-	assert.NotNil(blockFilter.Verify(block), "PASS: verify invalid block")
+	assert.NotNil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify invalid block")
+	assert.NotNil(blockFilter.Verify(port.RemoteInPortId, block), "PASS: verify invalid block")
 }
 
 func TestBlockFilter_Verify2(t *testing.T) {
+	defer monkey.UnpatchAll()
 	assert := assert.New(t)
 	// init event center
 	eventCenter := mockEventCenter()
@@ -107,7 +113,8 @@ func TestBlockFilter_Verify2(t *testing.T) {
 	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
 		return validateWorker
 	})
-	assert.NotNil(blockFilter.Verify(block), "PASS: verify invalid block")
+	assert.NotNil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify invalid block")
+	assert.NotNil(blockFilter.Verify(port.RemoteInPortId, block), "PASS: verify invalid block")
 }
 
 type eventCenter struct {

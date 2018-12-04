@@ -21,7 +21,7 @@ func NewTxFilter() *TxFilter {
 
 // Verify verify a switch message whether is validated.
 // return nil if message is validated, otherwise return relative error
-func (txValidator *TxFilter) Verify(msg interface{}) error {
+func (txValidator *TxFilter) Verify(portId int, msg interface{}) error {
 	switch msg := msg.(type) {
 	case *types.Transaction:
 		return txValidator.doVerify(msg)

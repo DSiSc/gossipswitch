@@ -25,7 +25,7 @@ func NewBlockFilter(eventCenter types.EventCenter) *BlockFilter {
 
 // Verify verify a switch message whether is validated.
 // return nil if message is validated, otherwise return relative error
-func (filter *BlockFilter) Verify(msg interface{}) error {
+func (filter *BlockFilter) Verify(portId int, msg interface{}) error {
 	var err error
 	switch msg := msg.(type) {
 	case *types.Block:

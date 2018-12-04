@@ -2,6 +2,7 @@ package gossipswitch
 
 import (
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/gossipswitch/port"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -10,7 +11,7 @@ import (
 type mockSwitchFiler struct {
 }
 
-func (filter *mockSwitchFiler) Verify(msg interface{}) error {
+func (filter *mockSwitchFiler) Verify(portId int, msg interface{}) error {
 	return nil
 }
 
@@ -35,10 +36,10 @@ func Test_InPort(t *testing.T) {
 	assert := assert.New(t)
 	var sw = NewGossipSwitch(&mockSwitchFiler{})
 	assert.NotNil(sw, "FAILED: failed to create GossipSwitch")
-	var localInPort = sw.InPort(LocalInPortId)
+	var localInPort = sw.InPort(port.LocalInPortId)
 	assert.NotNil(localInPort, "FAILED: failed to get local in port")
 
-	var remoteInPort = sw.InPort(LocalInPortId)
+	var remoteInPort = sw.InPort(port.LocalInPortId)
 	assert.NotNil(remoteInPort, "FAILED: failed to get remote in port.")
 }
 
@@ -48,10 +49,10 @@ func Test_OutPort(t *testing.T) {
 	var sw = NewGossipSwitch(&mockSwitchFiler{})
 	assert.NotNil(sw, "FAILED: failed to create GossipSwitch")
 
-	var localOutPort = sw.OutPort(LocalOutPortId)
+	var localOutPort = sw.OutPort(port.LocalOutPortId)
 	assert.NotNil(localOutPort, "FAILED: failed to get local out port")
 
-	var remoteOutPort = sw.OutPort(RemoteOutPortId)
+	var remoteOutPort = sw.OutPort(port.RemoteOutPortId)
 	assert.NotNil(remoteOutPort, "FAILED: failed to get remote out port.")
 }
 
@@ -88,11 +89,11 @@ func Test_onRecvMsg(t *testing.T) {
 
 	//send message to switch
 	txMsg := &types.Transaction{}
-	sw.InPort(LocalInPortId).Channel() <- txMsg
+	sw.InPort(port.LocalInPortId).Channel() <- txMsg
 
 	recvMsgChan := make(chan interface{})
 	// bind output func to switch out port
-	outPort := sw.OutPort(LocalOutPortId)
+	outPort := sw.OutPort(port.LocalOutPortId)
 	outPort.BindToPort(func(msg interface{}) error {
 		recvMsgChan <- msg
 		return nil

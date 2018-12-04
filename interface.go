@@ -1,12 +1,14 @@
 package gossipswitch
 
+import "github.com/DSiSc/gossipswitch/port"
+
 // GossipSwitchAPI is gossipswitch's public api.
 type GossipSwitchAPI interface {
 	// InPort get switch's in port by port id, return nil if there is no port with specific id.
-	InPort(portId int) *InPort
+	InPort(portId int) *port.InPort
 
 	// InPort get switch's out port by port id, return nil if there is no port with specific id.
-	OutPort(portId int) *OutPort
+	OutPort(portId int) *port.OutPort
 
 	// Start start the switch. Once started, switch will receive message from in port, and broadcast to
 	// out port

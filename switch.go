@@ -7,6 +7,7 @@ import (
 	"github.com/DSiSc/gossipswitch/filter"
 	"github.com/DSiSc/gossipswitch/filter/block"
 	"github.com/DSiSc/gossipswitch/filter/transaction"
+	"github.com/DSiSc/gossipswitch/port"
 	"sync"
 	"sync/atomic"
 )
@@ -19,22 +20,14 @@ const (
 	BlockSwitch
 )
 
-// common const value
-const (
-	LocalInPortId   = 0 //Local InPort ID, receive the message from local
-	RemoteInPortId  = 1 //Remote InPort ID, receive the message from remote
-	LocalOutPortId  = 0 //Local OutPort ID
-	RemoteOutPortId = 1 //Remote OutPort ID
-)
-
 // GossipSwitch is the implementation of gossip switch.
 // for gossipswitch, if a validated message is received, it will be broadcasted,
 // otherwise it will be dropped.
 type GossipSwitch struct {
 	switchMtx sync.Mutex
 	filter    filter.SwitchFilter
-	inPorts   map[int]*InPort
-	outPorts  map[int]*OutPort
+	inPorts   map[int]*port.InPort
+	outPorts  map[int]*port.OutPort
 	isRunning uint32 // atomic
 }
 
@@ -43,8 +36,8 @@ type GossipSwitch struct {
 func NewGossipSwitch(filter filter.SwitchFilter) *GossipSwitch {
 	sw := &GossipSwitch{
 		filter:   filter,
-		inPorts:  make(map[int]*InPort),
-		outPorts: make(map[int]*OutPort),
+		inPorts:  make(map[int]*port.InPort),
+		outPorts: make(map[int]*port.OutPort),
 	}
 	sw.initPort()
 	return sw
@@ -67,29 +60,29 @@ func NewGossipSwitchByType(switchType SwitchType, eventCenter types.EventCenter)
 	}
 	sw := &GossipSwitch{
 		filter:   msgFilter,
-		inPorts:  make(map[int]*InPort),
-		outPorts: make(map[int]*OutPort),
+		inPorts:  make(map[int]*port.InPort),
+		outPorts: make(map[int]*port.OutPort),
 	}
 	sw.initPort()
 	return sw, nil
 }
 
-// init switch's InPort and OutPort
+// init switch's port.InPort and port.OutPort
 func (sw *GossipSwitch) initPort() {
 	log.Info("Init switch's ports")
-	sw.inPorts[LocalInPortId] = newInPort()
-	sw.inPorts[RemoteInPortId] = newInPort()
-	sw.outPorts[LocalOutPortId] = newOutPort()
-	sw.outPorts[RemoteOutPortId] = newOutPort()
+	sw.inPorts[port.LocalInPortId] = port.NewInPort(port.LocalInPortId)
+	sw.inPorts[port.RemoteInPortId] = port.NewInPort(port.RemoteInPortId)
+	sw.outPorts[port.LocalOutPortId] = port.NewOutPort(port.LocalOutPortId)
+	sw.outPorts[port.RemoteOutPortId] = port.NewOutPort(port.RemoteOutPortId)
 }
 
-// InPort get switch's in port by port id, return nil if there is no port with specific id.
-func (sw *GossipSwitch) InPort(portId int) *InPort {
+// port.InPort get switch's in port by port id, return nil if there is no port with specific id.
+func (sw *GossipSwitch) InPort(portId int) *port.InPort {
 	return sw.inPorts[portId]
 }
 
-// InPort get switch's out port by port id, return nil if there is no port with specific id.
-func (sw *GossipSwitch) OutPort(portId int) *OutPort {
+// port.InPort get switch's out port by port id, return nil if there is no port with specific id.
+func (sw *GossipSwitch) OutPort(portId int) *port.OutPort {
 	return sw.outPorts[portId]
 }
 
@@ -125,11 +118,11 @@ func (sw *GossipSwitch) IsRunning() bool {
 }
 
 // listen to receive message from the in port
-func (sw *GossipSwitch) receiveRoutine(inPort *InPort) {
+func (sw *GossipSwitch) receiveRoutine(inPort *port.InPort) {
 	for {
 		select {
-		case msg := <-inPort.read():
-			sw.onRecvMsg(msg)
+		case msg := <-inPort.Read():
+			sw.onRecvMsg(inPort.PortId(), msg)
 		}
 
 		//check switch status
@@ -140,18 +133,18 @@ func (sw *GossipSwitch) receiveRoutine(inPort *InPort) {
 }
 
 // deal with the received message.
-func (sw *GossipSwitch) onRecvMsg(msg interface{}) {
-	log.Debug("Received a message %v from InPort", msg)
-	if err := sw.filter.Verify(msg); err == nil {
+func (sw *GossipSwitch) onRecvMsg(portId int, msg interface{}) {
+	log.Debug("Received a message %v from port.InPort", msg)
+	if err := sw.filter.Verify(portId, msg); err == nil {
 		sw.broadCastMsg(msg)
 	}
 }
 
 // broadcast the validated message to all out ports.
 func (sw *GossipSwitch) broadCastMsg(msg interface{}) error {
-	log.Debug("Broadcast message %v to OutPorts", msg)
+	log.Debug("Broadcast message %v to port.OutPorts", msg)
 	for _, outPort := range sw.outPorts {
-		go outPort.write(msg)
+		go outPort.Write(msg)
 	}
 	return nil
 }

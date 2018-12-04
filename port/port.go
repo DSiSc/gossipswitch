@@ -1,8 +1,16 @@
-package gossipswitch
+package port
 
 import (
 	"github.com/DSiSc/craft/log"
 	"sync"
+)
+
+// common const value
+const (
+	LocalInPortId   = 0 //Local InPort ID, receive the message from local
+	RemoteInPortId  = 1 //Remote InPort ID, receive the message from remote
+	LocalOutPortId  = 0 //Local OutPort ID
+	RemoteOutPortId = 1 //Remote OutPort ID
 )
 
 // state is used to record switch port state. e.g., message statistics
@@ -11,16 +19,18 @@ type state struct {
 	OutCount uint
 }
 
-// InPort is switch in port. Message will be send to InPort, and then switch read the message from InPort
+// InPort is switch in port. Message will be send to InPort, and then switch Read the message from InPort
 type InPort struct {
-	State   state
+	id      int
+	state   state
 	channel chan interface{}
 }
 
 // create a new in port instance
-func newInPort() *InPort {
+func NewInPort(id int) *InPort {
 	return &InPort{
-		State:   state{},
+		id:      id,
+		state:   state{},
 		channel: make(chan interface{}),
 	}
 }
@@ -30,8 +40,13 @@ func (inPort *InPort) Channel() chan<- interface{} {
 	return inPort.channel
 }
 
-// read message from this InPort, will be blocked until the message arrives.
-func (inPort *InPort) read() <-chan interface{} {
+// PortId return this port's id
+func (inPort *InPort) PortId() int {
+	return inPort.id
+}
+
+// Read message from this InPort, will be blocked until the message arrives.
+func (inPort *InPort) Read() <-chan interface{} {
 	return inPort.channel
 }
 
@@ -40,15 +55,17 @@ type OutPutFunc func(msg interface{}) error
 
 // InPort is switch out port. Switch will broadcast message to out port
 type OutPort struct {
+	id          int
 	outPortMtx  sync.Mutex
-	State       state
+	state       state
 	outPutFuncs []OutPutFunc
 }
 
 // create a new out port instance
-func newOutPort() *OutPort {
+func NewOutPort(id int) *OutPort {
 	return &OutPort{
-		State: state{},
+		id:    id,
+		state: state{},
 	}
 }
 
@@ -61,8 +78,13 @@ func (outPort *OutPort) BindToPort(outPutFunc OutPutFunc) error {
 	return nil
 }
 
-// write message to this OutPort
-func (outPort *OutPort) write(msg interface{}) error {
+// PortId return this port's id
+func (outPort *OutPort) PortId() int {
+	return outPort.id
+}
+
+// Write message to this OutPort
+func (outPort *OutPort) Write(msg interface{}) error {
 	outPort.outPortMtx.Lock()
 	defer outPort.outPortMtx.Unlock()
 	for _, outPutFunc := range outPort.outPutFuncs {

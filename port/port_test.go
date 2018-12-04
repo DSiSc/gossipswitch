@@ -1,4 +1,4 @@
-package gossipswitch
+package port
 
 import (
 	"github.com/DSiSc/craft/types"
@@ -9,24 +9,27 @@ import (
 // Test new a InPort
 func Test_NewInPort(t *testing.T) {
 	assert := assert.New(t)
-	var inPort = newInPort()
+	var inPort = NewInPort(LocalInPortId)
+	assert.NotNil(inPort, "FAILED: failed to create InPort")
+
+	inPort = NewInPort(RemoteInPortId)
 	assert.NotNil(inPort, "FAILED: failed to create InPort")
 }
 
 // Test get InPort channel
 func TestInPort_Channel(t *testing.T) {
 	assert := assert.New(t)
-	var inPort = newInPort()
+	var inPort = NewInPort(LocalInPortId)
 	assert.NotNil(inPort, "FAILED: failed to create InPort")
 
 	inputChannel := inPort.Channel()
 	assert.NotNil(inputChannel, "FAILED: failed to get InPort channel")
 }
 
-// Test read message from InPort
+// Test Read message from InPort
 func Test_Read(t *testing.T) {
 	assert := assert.New(t)
-	var inPort = newInPort()
+	var inPort = NewInPort(LocalInPortId)
 	assert.NotNil(inPort, "FAILED: failed to create InPort")
 
 	txMsg := &types.Transaction{}
@@ -34,21 +37,24 @@ func Test_Read(t *testing.T) {
 		inPort.Channel() <- txMsg
 	}()
 
-	recvMsg := <-inPort.read()
-	assert.Equal(recvMsg, txMsg, "FAILED: failed to read the message")
+	recvMsg := <-inPort.Read()
+	assert.Equal(recvMsg, txMsg, "FAILED: failed to Read the message")
 }
 
 // Test new a OutPort
 func Test_NewOutPort(t *testing.T) {
 	assert := assert.New(t)
-	var outPort = newOutPort()
+	var outPort = NewOutPort(LocalOutPortId)
+	assert.NotNil(outPort, "FAILED: failed to create OutPort")
+
+	outPort = NewOutPort(RemoteOutPortId)
 	assert.NotNil(outPort, "FAILED: failed to create OutPort")
 }
 
 // Test bind OutPutFunc to OutPort
 func TestOutPort_BindToPort(t *testing.T) {
 	assert := assert.New(t)
-	var outPort = newOutPort()
+	var outPort = NewOutPort(LocalOutPortId)
 	assert.NotNil(outPort, "FAILED: failed to create OutPort")
 
 	outPutFunc := func(msg interface{}) error {
@@ -62,10 +68,10 @@ func TestOutPort_BindToPort(t *testing.T) {
 		}, "FAILESD: failed to bind OutPutFunc to OutPort")
 }
 
-// Test write message to OutPort
+// Test Write message to OutPort
 func TestOutPort_Write(t *testing.T) {
 	assert := assert.New(t)
-	var outPort = newOutPort()
+	var outPort = NewOutPort(LocalOutPortId)
 	assert.NotNil(outPort, "FAILED: failed to create OutPort")
 
 	var recvMsgChan = make(chan interface{})
@@ -76,8 +82,8 @@ func TestOutPort_Write(t *testing.T) {
 	outPort.BindToPort(outPutFunc)
 
 	sendMsg := &types.Transaction{}
-	outPort.write(sendMsg)
+	outPort.Write(sendMsg)
 
 	recvMsg := <-recvMsgChan
-	assert.Equal(recvMsg, sendMsg, "FAILED: failed to write message to OutPort")
+	assert.Equal(recvMsg, sendMsg, "FAILED: failed to Write message to OutPort")
 }

@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/gossipswitch/port"
 	"github.com/DSiSc/gossipswitch/util"
 	wallett "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
@@ -35,10 +36,12 @@ func Test_TxFilterVerify(t *testing.T) {
 	}
 	key, _ := wallett.DefaultTestKey()
 	tx, _ := wallett.SignTx(originalTx, new(wallett.FrontierSigner), key)
-	assert.Nil(txFilter.Verify(tx), "PASS: verify validated message")
+	assert.Nil(txFilter.Verify(port.LocalInPortId, tx), "PASS: verify validated message")
+	assert.Nil(txFilter.Verify(port.RemoteInPortId, tx), "PASS: verify validated message")
 
 	block := &types.Block{}
-	assert.NotNil(txFilter.Verify(block), "PASS: verify in validated message")
+	assert.NotNil(txFilter.Verify(port.LocalInPortId, block), "PASS: verify in validated message")
+	assert.NotNil(txFilter.Verify(port.RemoteInPortId, block), "PASS: verify in validated message")
 }
 
 // Test verify transaction message.
@@ -61,10 +64,12 @@ func Test_TxFilterVerify1(t *testing.T) {
 	}
 	key, _ := wallett.DefaultTestKey()
 	tx, _ := wallett.SignTx(originalTx, new(wallett.FrontierSigner), key)
-	assert.Nil(txFilter.Verify(tx), "PASS: verify validated message")
+	assert.Nil(txFilter.Verify(port.LocalInPortId, tx), "PASS: verify validated message")
+	assert.Nil(txFilter.Verify(port.RemoteInPortId, tx), "PASS: verify validated message")
 
 	block := &types.Block{}
-	assert.NotNil(txFilter.Verify(block), "PASS: verify in validated message")
+	assert.NotNil(txFilter.Verify(port.LocalInPortId, block), "PASS: verify in validated message")
+	assert.NotNil(txFilter.Verify(port.RemoteInPortId, block), "PASS: verify in validated message")
 }
 
 var addressA = types.Address{
