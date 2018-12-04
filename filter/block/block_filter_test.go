@@ -7,7 +7,6 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/gossipswitch/port"
 	"github.com/DSiSc/monkey"
-	"github.com/DSiSc/validator/worker"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
@@ -69,24 +68,21 @@ func TestBlockFilter_Verify(t *testing.T) {
 	assert.NotNil(blockFilter.Verify(port.RemoteInPortId, tx), "PASS: verify invalid message")
 
 	block := mockBlock()
-	var validateWorker *worker.Worker
-	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
+	var validateWorker *Worker
+	patchGuard := monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *Worker) error {
 		return nil
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *worker.Worker) types.Receipts {
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *Worker) types.Receipts {
 		return types.Receipts{}
 	})
-	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
+	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *Worker {
 		return validateWorker
 	})
 	assert.Nil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify valid block")
-	assert.Nil(blockFilter.Verify(port.RemoteInPortId, block), "PASS: verify valid block")
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
+	patchGuard.Unpatch()
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *Worker) error {
 		return errors.New("invalid block")
-	})
-	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
-		return validateWorker
 	})
 	assert.NotNil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify invalid block")
 	assert.NotNil(blockFilter.Verify(port.RemoteInPortId, block), "PASS: verify invalid block")
@@ -103,14 +99,14 @@ func TestBlockFilter_Verify2(t *testing.T) {
 
 	block := mockBlock()
 	block.Header.Height = 123
-	var validateWorker *worker.Worker
-	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *worker.Worker) error {
+	var validateWorker *Worker
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "VerifyBlock", func(self *Worker) error {
 		return nil
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *worker.Worker) types.Receipts {
+	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *Worker) types.Receipts {
 		return types.Receipts{}
 	})
-	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
+	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *Worker {
 		return validateWorker
 	})
 	assert.NotNil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify invalid block")

@@ -7,7 +7,6 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
-	"github.com/DSiSc/validator/worker"
 )
 
 // TxFilter is an implemention of switch message filter,
@@ -29,7 +28,7 @@ func (filter *BlockFilter) Verify(portId int, msg interface{}) error {
 	var err error
 	switch msg := msg.(type) {
 	case *types.Block:
-		err = doValidate(msg)
+		err = filter.doValidate(msg)
 	default:
 		log.Error("Invalidate block message ")
 		err = errors.New("Invalidate block message ")
@@ -38,20 +37,21 @@ func (filter *BlockFilter) Verify(portId int, msg interface{}) error {
 	//send verification failed event
 	if err != nil {
 		log.Debug("Send message verification failed event")
-		filter.eventCenter.Notify(types.EventBlockVerifyFailed, err)
 	}
 	return err
 }
 
 // do verify operation
-func doValidate(block *types.Block) error {
+func (filter *BlockFilter) doValidate(block *types.Block) error {
 	log.Debug("Start to validate received block %x", block.HeaderHash)
 
 	// verify block header hash
 	blockHash := HeaderHash(block.Header)
 	if !bytes.Equal(blockHash[:], block.HeaderHash[:]) {
 		log.Error("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
-		return fmt.Errorf("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
+		err := fmt.Errorf("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
+		filter.eventCenter.Notify(types.EventBlockVerifyFailed, err)
+		return err
 	}
 
 	// retrieve previous world state
@@ -59,13 +59,17 @@ func doValidate(block *types.Block) error {
 	bc, err := blockchain.NewBlockChainByBlockHash(preBlkHash)
 	if err != nil {
 		log.Error("Failed to validate previous block, as: %v", err)
-		return fmt.Errorf("failed to get previous block state, as:%v", err)
+		err := fmt.Errorf("failed to get previous block state, as:%v", err)
+		filter.eventCenter.Notify(types.EventBlockVerifyFailed, err)
+		return err
 	}
 
 	currentHeight := bc.GetCurrentBlockHeight()
 	if currentHeight >= block.Header.Height {
 		log.Error("Local block height %d is bigger than received block %x, height: %d", currentHeight, blockHash, block.Header.Height)
-		return fmt.Errorf("Local block height %d is bigger than received block %x, height: %d ", currentHeight, blockHash, block.Header.Height)
+		err := fmt.Errorf("Local block height %d is bigger than received block %x, height: %d ", currentHeight, blockHash, block.Header.Height)
+		filter.eventCenter.Notify(types.EventBlockExisted, err)
+		return err
 	}
 
 	// verify block
@@ -73,15 +77,16 @@ func doValidate(block *types.Block) error {
 	err = blockValidator.VerifyBlock()
 	if err != nil {
 		log.Error("Validate block failed, as %v", err)
+		err := fmt.Errorf("Validate block failed, as %v", err)
+		filter.eventCenter.Notify(types.EventBlockVerifyFailed, err)
 		return err
 	}
 
 	// write block to local database
-	go bc.WriteBlockWithReceipts(block, blockValidator.GetReceipts())
-	return nil
+	return bc.WriteBlockWithReceipts(block, blockValidator.GetReceipts())
 }
 
 // get validate worker by previous world state and block
-func getValidateWorker(bc *blockchain.BlockChain, block *types.Block) *worker.Worker {
-	return worker.NewWorker(bc, block)
+func getValidateWorker(bc *blockchain.BlockChain, block *types.Block) *Worker {
+	return NewWorker(bc, block)
 }
