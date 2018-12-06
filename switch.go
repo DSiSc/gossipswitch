@@ -134,7 +134,7 @@ func (sw *GossipSwitch) receiveRoutine(inPort *port.InPort) {
 
 // deal with the received message.
 func (sw *GossipSwitch) onRecvMsg(portId int, msg interface{}) {
-	log.Debug("Received a message %v from port.InPort", msg)
+	//TODO log.Debug("Received a message %v from port.InPort", msg)
 	if err := sw.filter.Verify(portId, msg); err == nil {
 		sw.broadCastMsg(msg)
 	}
