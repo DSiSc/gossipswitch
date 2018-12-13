@@ -11,7 +11,6 @@ import (
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
-	wallett "github.com/DSiSc/wallet/core/types"
 )
 
 type Worker struct {
@@ -110,7 +109,15 @@ func (self *Worker) VerifyBlock() error {
 		log.Debug("Assign receipts hash %x to block %d.", receiptHash, self.block.Header.Height)
 		self.block.Header.ReceiptsRoot = receiptHash
 	}
-	// 7. verify digest if it exists
+
+	// 7. verify state root
+	stateRoot := self.chain.IntermediateRoot(false)
+	if !bytes.Equal(self.block.Header.StateRoot[:], stateRoot[:]) {
+		log.Warn("The calculated StateRoot is inconsistent with the expected value, calculated: %x, expected: %x", stateRoot, self.block.Header.StateRoot)
+		return fmt.Errorf("state root is inconsistent")
+	}
+
+	// 8. verify digest if it exists
 	if !bytes.Equal(defaultHash[:], self.block.Header.MixDigest[:]) {
 		digestHash := vcommon.HeaderDigest(self.block.Header)
 		if !bytes.Equal(digestHash[:], self.block.Header.MixDigest[:]) {
@@ -128,10 +135,6 @@ func (self *Worker) VerifyBlock() error {
 
 func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, header *types.Header,
 	tx *types.Transaction, usedGas *uint64) (*types.Receipt, uint64, error) {
-	if self.VerifyTrsSignature(tx) == false {
-		log.Error("Transaction signature verify failed.")
-		return nil, 0, fmt.Errorf("transaction signature failed")
-	}
 	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
@@ -158,20 +161,6 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	// receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	return receipt, gas, err
-}
-
-func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
-	signer := new(wallett.FrontierSigner)
-	from, err := wallett.Sender(signer, tx)
-	if nil != err {
-		log.Error("Get from by tx's %x signer failed with %v.", vcommon.TxHash(tx), err)
-		return false
-	}
-	if !bytes.Equal((*(tx.Data.From))[:], from.Bytes()) {
-		log.Error("Transaction signature verify failed, tx.Data.From is %x, while signed from is %x.", *tx.Data.From, from)
-		return false
-	}
-	return true
 }
 
 func (self *Worker) GetReceipts() types.Receipts {
