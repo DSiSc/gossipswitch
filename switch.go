@@ -78,11 +78,13 @@ func (sw *GossipSwitch) initPort() {
 
 // port.InPort get switch's in port by port id, return nil if there is no port with specific id.
 func (sw *GossipSwitch) InPort(portId int) *port.InPort {
+	log.Debug("Get switch %v in port", portId)
 	return sw.inPorts[portId]
 }
 
 // port.InPort get switch's out port by port id, return nil if there is no port with specific id.
 func (sw *GossipSwitch) OutPort(portId int) *port.OutPort {
+	log.Debug("Get switch %v out port", portId)
 	return sw.outPorts[portId]
 }
 
