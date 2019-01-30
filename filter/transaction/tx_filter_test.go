@@ -13,14 +13,14 @@ import (
 // Test new TxFilter
 func Test_NewTxFilter(t *testing.T) {
 	assert := assert.New(t)
-	var txFilter = NewTxFilter()
+	var txFilter = NewTxFilter(true)
 	assert.NotNil(txFilter, "FAILED: failed to create TxFilter")
 }
 
 // Test verify transaction message.
 func Test_TxFilterVerify(t *testing.T) {
 	assert := assert.New(t)
-	var txFilter = NewTxFilter()
+	var txFilter = NewTxFilter(true)
 	assert.NotNil(txFilter, "FAILED: failed to create TxFilter")
 
 	addFrom := util.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
@@ -47,7 +47,7 @@ func Test_TxFilterVerify(t *testing.T) {
 // Test verify transaction message.
 func Test_TxFilterVerify1(t *testing.T) {
 	assert := assert.New(t)
-	var txFilter = NewTxFilter()
+	var txFilter = NewTxFilter(true)
 	assert.NotNil(txFilter, "FAILED: failed to create TxFilter")
 
 	addFrom := util.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")

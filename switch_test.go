@@ -2,6 +2,7 @@ package gossipswitch
 
 import (
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/gossipswitch/config"
 	"github.com/DSiSc/gossipswitch/port"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -15,6 +16,13 @@ func (filter *mockSwitchFiler) Verify(portId int, msg interface{}) error {
 	return nil
 }
 
+// mock switch config
+func mockSwitchConfig() *config.SwitchConfig {
+	return &config.SwitchConfig{
+		VerifySignature: true,
+	}
+}
+
 // Test new a gossipsiwtch
 func Test_NewGossipSwitch(t *testing.T) {
 	assert := assert.New(t)
@@ -25,9 +33,9 @@ func Test_NewGossipSwitch(t *testing.T) {
 // Test new a gossipsiwtch by type
 func Test_NewGossipSwitchByType(t *testing.T) {
 	assert := assert.New(t)
-	var _, err = NewGossipSwitchByType(TxSwitch, &eventCenter{})
+	var _, err = NewGossipSwitchByType(TxSwitch, &eventCenter{}, mockSwitchConfig())
 	assert.Nil(err, "FAILED: failed to create GossipSwitch")
-	_, err = NewGossipSwitchByType(BlockSwitch, &eventCenter{})
+	_, err = NewGossipSwitchByType(BlockSwitch, &eventCenter{}, mockSwitchConfig())
 	assert.Nil(err, "FAILED: failed to create GossipSwitch")
 }
 

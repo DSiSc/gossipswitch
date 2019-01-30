@@ -11,6 +11,7 @@ import (
 	"github.com/DSiSc/validator/tools"
 	workerc "github.com/DSiSc/validator/worker/common"
 	walletc "github.com/DSiSc/wallet/common"
+	wallett "github.com/DSiSc/wallet/core/types"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"reflect"
@@ -19,7 +20,7 @@ import (
 
 func TestNewWorker(t *testing.T) {
 	assert := assert.New(t)
-	var worker = NewWorker(nil, nil)
+	var worker = NewWorker(nil, nil, true)
 	assert.NotNil(worker)
 	assert.Nil(worker.block)
 	assert.Nil(worker.chain)
@@ -71,7 +72,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 			StateRoot: MockHash,
 		},
 	}
-	worker := NewWorker(nil, mockBlock)
+	worker := NewWorker(nil, mockBlock, true)
 	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetBlockByHash", func(bc *blockchain.BlockChain, hash types.Hash) (*types.Block, error) {
 		return &types.Block{
 			Header: &types.Header{
@@ -151,7 +152,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 func TestWorker_VerifyTransaction(t *testing.T) {
 	defer monkey.UnpatchAll()
 	assert := assert.New(t)
-	worker := NewWorker(nil, nil)
+	worker := NewWorker(nil, nil, true)
 
 	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *blockchain.BlockChain, types.Address) evm.Context {
 		return evm.Context{
@@ -171,7 +172,9 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 			Payload:      addressB[:10],
 		},
 	}
-	receipit, gas, err := worker.VerifyTransaction(addressA, nil, nil, mockTrx, nil)
+	key, _ := wallett.DefaultTestKey()
+	signedTx, _ := wallett.SignTx(mockTrx, new(wallett.FrontierSigner), key)
+	receipit, gas, err := worker.VerifyTransaction(addressA, nil, nil, signedTx, nil)
 	assert.Equal(err, fmt.Errorf("Apply failed."))
 	assert.Nil(receipit)
 	assert.Equal(uint64(0), gas)
@@ -193,14 +196,15 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	})
 	mockTrx.Data.Recipient = nil
 	var usedGas = uint64(10)
-	receipit, gas, err = worker.VerifyTransaction(addressA, nil, nil, mockTrx, &usedGas)
+	signedTx, _ = wallett.SignTx(mockTrx, new(wallett.FrontierSigner), key)
+	receipit, gas, err = worker.VerifyTransaction(addressA, nil, nil, signedTx, &usedGas)
 	assert.Equal(addressNew, receipit.ContractAddress)
 	assert.Equal(uint64(10), gas)
 }
 
 func TestWorker_GetReceipts(t *testing.T) {
 	assert := assert.New(t)
-	worker := NewWorker(nil, nil)
+	worker := NewWorker(nil, nil, true)
 	receipts := worker.GetReceipts()
 	assert.Equal(len(receipts), len(worker.receipts))
 }

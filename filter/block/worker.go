@@ -11,19 +11,22 @@ import (
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
+	wallett "github.com/DSiSc/wallet/core/types"
 )
 
 type Worker struct {
-	block    *types.Block
-	chain    *blockchain.BlockChain
-	receipts types.Receipts
-	logs     []*types.Log
+	block           *types.Block
+	chain           *blockchain.BlockChain
+	receipts        types.Receipts
+	logs            []*types.Log
+	verifySignature bool
 }
 
-func NewWorker(chain *blockchain.BlockChain, block *types.Block) *Worker {
+func NewWorker(chain *blockchain.BlockChain, block *types.Block, verifySignature bool) *Worker {
 	return &Worker{
-		block: block,
-		chain: chain,
+		block:           block,
+		chain:           chain,
+		verifySignature: verifySignature,
 	}
 }
 
@@ -135,6 +138,13 @@ func (self *Worker) VerifyBlock() error {
 
 func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, header *types.Header,
 	tx *types.Transaction, usedGas *uint64) (*types.Receipt, uint64, error) {
+	// verify tx's signature
+	if self.verifySignature {
+		if self.VerifyTrsSignature(tx) == false {
+			log.Error("Transaction signature verify failed.")
+			return nil, 0, fmt.Errorf("transaction signature failed")
+		}
+	}
 	context := evm.NewEVMContext(*tx, header, self.chain, author)
 	evmEnv := evm.NewEVM(context, self.chain)
 	_, gas, failed, err := ApplyTransaction(evmEnv, tx, gp)
@@ -166,4 +176,18 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 func (self *Worker) GetReceipts() types.Receipts {
 	log.Debug("Get receipts.")
 	return self.receipts
+}
+
+func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
+	signer := new(wallett.FrontierSigner)
+	from, err := wallett.Sender(signer, tx)
+	if nil != err {
+		log.Error("Get from by tx's %x signer failed with %v.", vcommon.TxHash(tx), err)
+		return false
+	}
+	if !bytes.Equal((*(tx.Data.From))[:], from.Bytes()) {
+		log.Error("Transaction signature verify failed, tx.Data.From is %x, while signed from is %x.", *tx.Data.From, from)
+		return false
+	}
+	return true
 }

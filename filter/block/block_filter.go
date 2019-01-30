@@ -7,20 +7,23 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
+	common "github.com/DSiSc/gossipswitch/filter"
 	"sync"
 )
 
 // TxFilter is an implemention of switch message filter,
 // switch will use transaction filter to verify transaction message.
 type BlockFilter struct {
-	eventCenter types.EventCenter
-	lock        sync.Mutex
+	eventCenter     types.EventCenter
+	verifySignature bool
+	lock            sync.Mutex
 }
 
 // create a new block filter instance.
-func NewBlockFilter(eventCenter types.EventCenter) *BlockFilter {
+func NewBlockFilter(eventCenter types.EventCenter, verifySignature bool) *BlockFilter {
 	return &BlockFilter{
-		eventCenter: eventCenter,
+		eventCenter:     eventCenter,
+		verifySignature: verifySignature,
 	}
 }
 
@@ -50,7 +53,7 @@ func (filter *BlockFilter) doValidate(block *types.Block) error {
 	log.Debug("Start to validate received block %x", block.HeaderHash)
 
 	// verify block header hash
-	blockHash := HeaderHash(block.Header)
+	blockHash := common.HeaderHash(block.Header)
 	if !bytes.Equal(blockHash[:], block.HeaderHash[:]) {
 		log.Error("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
 		err := fmt.Errorf("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
@@ -77,7 +80,7 @@ func (filter *BlockFilter) doValidate(block *types.Block) error {
 	}
 
 	// verify block
-	blockValidator := getValidateWorker(bc, block)
+	blockValidator := getValidateWorker(bc, block, filter.verifySignature)
 	err = blockValidator.VerifyBlock()
 	if err != nil {
 		log.Error("Validate block failed, as %v", err)
@@ -91,6 +94,6 @@ func (filter *BlockFilter) doValidate(block *types.Block) error {
 }
 
 // get validate worker by previous world state and block
-func getValidateWorker(bc *blockchain.BlockChain, block *types.Block) *Worker {
-	return NewWorker(bc, block)
+func getValidateWorker(bc *blockchain.BlockChain, block *types.Block, verifySignature bool) *Worker {
+	return NewWorker(bc, block, verifySignature)
 }

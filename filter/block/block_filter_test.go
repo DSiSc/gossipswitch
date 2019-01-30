@@ -5,6 +5,7 @@ import (
 	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/blockchain/config"
 	"github.com/DSiSc/craft/types"
+	"github.com/DSiSc/gossipswitch/filter"
 	"github.com/DSiSc/gossipswitch/port"
 	"github.com/DSiSc/monkey"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,7 @@ func Test_NewBlockFilter(t *testing.T) {
 	assert := assert.New(t)
 	// init event center
 	eventCenter := mockEventCenter()
-	var blockFilter = NewBlockFilter(eventCenter)
+	var blockFilter = NewBlockFilter(eventCenter, true)
 	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
 }
 
@@ -43,8 +44,8 @@ func mockBlock() *types.Block {
 			MixDigest:     types.Hash{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 	}
-	b.Header.PrevBlockHash = HeaderHash(bc.GetCurrentBlock().Header)
-	b.HeaderHash = HeaderHash(b.Header)
+	b.Header.PrevBlockHash = filter.HeaderHash(bc.GetCurrentBlock().Header)
+	b.HeaderHash = filter.HeaderHash(b.Header)
 	return b
 }
 
@@ -60,7 +61,7 @@ func TestBlockFilter_Verify(t *testing.T) {
 	// init event center
 	eventCenter := mockEventCenter()
 
-	var blockFilter = NewBlockFilter(eventCenter)
+	var blockFilter = NewBlockFilter(eventCenter, true)
 	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
 
 	tx := &types.Transaction{}
@@ -75,7 +76,7 @@ func TestBlockFilter_Verify(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *Worker) types.Receipts {
 		return types.Receipts{}
 	})
-	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *Worker {
+	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block, verifySignature bool) *Worker {
 		return validateWorker
 	})
 	assert.Nil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify valid block")
@@ -94,7 +95,7 @@ func TestBlockFilter_Verify2(t *testing.T) {
 	// init event center
 	eventCenter := mockEventCenter()
 
-	var blockFilter = NewBlockFilter(eventCenter)
+	var blockFilter = NewBlockFilter(eventCenter, true)
 	assert.NotNil(blockFilter, "FAILED: failed to create BlockFilter")
 
 	block := mockBlock()
@@ -106,7 +107,7 @@ func TestBlockFilter_Verify2(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *Worker) types.Receipts {
 		return types.Receipts{}
 	})
-	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block) *Worker {
+	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block, verifySignature bool) *Worker {
 		return validateWorker
 	})
 	assert.NotNil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify invalid block")
