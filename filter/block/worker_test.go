@@ -182,9 +182,13 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error) {
 		return addressA[:10], uint64(10), true, nil
 	})
-	var blockChain *blockchain.BlockChain
+
+	blockChain := worker.chain
 	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "IntermediateRoot", func(*blockchain.BlockChain, bool) types.Hash {
 		return MockHash
+	})
+	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetLogs", func(*blockchain.BlockChain, types.Hash) []*types.Log {
+		return make([]*types.Log, 0)
 	})
 	monkey.Patch(crypto.CreateAddress, func(types.Address, uint64) types.Address {
 		return addressNew

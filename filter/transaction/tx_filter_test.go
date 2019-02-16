@@ -13,14 +13,14 @@ import (
 // Test new TxFilter
 func Test_NewTxFilter(t *testing.T) {
 	assert := assert.New(t)
-	var txFilter = NewTxFilter(true)
+	var txFilter = NewTxFilter(&eventCenter{}, true)
 	assert.NotNil(txFilter, "FAILED: failed to create TxFilter")
 }
 
 // Test verify transaction message.
 func Test_TxFilterVerify(t *testing.T) {
 	assert := assert.New(t)
-	var txFilter = NewTxFilter(true)
+	var txFilter = NewTxFilter(&eventCenter{}, true)
 	assert.NotNil(txFilter, "FAILED: failed to create TxFilter")
 
 	addFrom := util.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
@@ -47,7 +47,7 @@ func Test_TxFilterVerify(t *testing.T) {
 // Test verify transaction message.
 func Test_TxFilterVerify1(t *testing.T) {
 	assert := assert.New(t)
-	var txFilter = NewTxFilter(true)
+	var txFilter = NewTxFilter(&eventCenter{}, true)
 	assert.NotNil(txFilter, "FAILED: failed to create TxFilter")
 
 	addFrom := util.HexToAddress("0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b")
@@ -85,4 +85,36 @@ var addressB = types.Address{
 var addressA1 = types.Address{
 	0xa9, 0x4f, 0x53, 0x74, 0xfc, 0xab, 0x24, 0xbc, 0xf6, 0x3e,
 	0xa2, 0x18, 0xc6, 0xa9, 0x27, 0x4d, 0x30, 0xab, 0x9a, 0x15,
+}
+
+type eventCenter struct {
+}
+
+// subscriber subscribe specified eventType with eventFunc
+func (*eventCenter) Subscribe(eventType types.EventType, eventFunc types.EventFunc) types.Subscriber {
+	return nil
+}
+
+// subscriber unsubscribe specified eventType
+func (*eventCenter) UnSubscribe(eventType types.EventType, subscriber types.Subscriber) (err error) {
+	return nil
+}
+
+// notify subscriber of eventType
+func (*eventCenter) Notify(eventType types.EventType, value interface{}) (err error) {
+	return nil
+}
+
+// notify specified eventFunc
+func (*eventCenter) NotifySubscriber(eventFunc types.EventFunc, value interface{}) {
+
+}
+
+// notify subscriber traversing all events
+func (*eventCenter) NotifyAll() (errs []error) {
+	return nil
+}
+
+// unsubscrible all event
+func (*eventCenter) UnSubscribeAll() {
 }

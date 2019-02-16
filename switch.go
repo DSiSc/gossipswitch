@@ -51,7 +51,7 @@ func NewGossipSwitchByType(switchType SwitchType, eventCenter types.EventCenter,
 	switch switchType {
 	case TxSwitch:
 		log.Info("New transaction switch")
-		msgFilter = transaction.NewTxFilter(switchConfig.VerifySignature)
+		msgFilter = transaction.NewTxFilter(eventCenter, switchConfig.VerifySignature)
 	case BlockSwitch:
 		log.Info("New block switch")
 		msgFilter = block.NewBlockFilter(eventCenter, switchConfig.VerifySignature)

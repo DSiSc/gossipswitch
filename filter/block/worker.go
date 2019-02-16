@@ -167,7 +167,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 		log.Info("Create contract with address %x within tx %x.", receipt.ContractAddress, receipt.TxHash)
 	}
 	// Set the receipt logs and create a bloom for filtering
-	// receipt.Logs = self.chain.GetLogs(tx.Hash())
+	receipt.Logs = self.chain.GetLogs(vcommon.TxHash(tx))
 	// receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
 
 	return receipt, gas, err
