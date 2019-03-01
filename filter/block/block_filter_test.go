@@ -44,8 +44,8 @@ func mockBlock() *types.Block {
 			MixDigest:     types.Hash{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 	}
-	b.Header.PrevBlockHash = filter.HeaderHash(bc.GetCurrentBlock().Header)
-	b.HeaderHash = filter.HeaderHash(b.Header)
+	b.Header.PrevBlockHash = filter.HeaderHash(bc.GetCurrentBlock())
+	b.HeaderHash = filter.HeaderHash(b)
 	return b
 }
 

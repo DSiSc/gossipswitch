@@ -53,7 +53,7 @@ func (filter *BlockFilter) doValidate(block *types.Block) error {
 	log.Debug("Start to validate received block %x", block.HeaderHash)
 
 	// verify block header hash
-	blockHash := common.HeaderHash(block.Header)
+	blockHash := common.HeaderHash(block)
 	if !bytes.Equal(blockHash[:], block.HeaderHash[:]) {
 		log.Error("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
 		err := fmt.Errorf("block header's hash %x, is not same with expected %x", blockHash, block.HeaderHash)
