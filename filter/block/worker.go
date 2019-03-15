@@ -8,6 +8,7 @@ import (
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/crypto-suite/crypto"
 	"github.com/DSiSc/evm-NG"
+	"github.com/DSiSc/gossipswitch/util"
 	vcommon "github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
@@ -85,7 +86,7 @@ func (self *Worker) VerifyBlock() error {
 	)
 	// 6. verify every transactions in the block by evm
 	for i, tx := range self.block.Transactions {
-		self.chain.Prepare(vcommon.TxHash(tx), vcommon.HeaderHash(self.block), i)
+		self.chain.Prepare(vcommon.TxHash(tx), self.block.Header.PrevBlockHash, i)
 		receipt, _, err := self.VerifyTransaction(self.block.Header.CoinBase, gp, self.block.Header, tx, new(uint64))
 		if err != nil {
 			log.Error("Tx %x verify failed with error %v.", vcommon.TxHash(tx), err)
@@ -168,7 +169,7 @@ func (self *Worker) VerifyTransaction(author types.Address, gp *common.GasPool, 
 	}
 	// Set the receipt logs and create a bloom for filtering
 	receipt.Logs = self.chain.GetLogs(vcommon.TxHash(tx))
-	// receipt.Bloom = types.CreateBloom(types.Receipts{receipt})
+	receipt.Bloom = util.CreateBloom(types.Receipts{receipt})
 
 	return receipt, gas, err
 }
