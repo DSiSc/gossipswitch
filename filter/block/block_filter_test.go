@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+var mockGenesisBlock = &types.Block{
+	Header:     &types.Header{},
+	HeaderHash: types.Hash{0xbc, 0xf1, 0xf4, 0x1f, 0xa1, 0x28, 0x66, 0x3d, 0x05, 0x98, 0x1e, 0xf1, 0x55, 0x9e, 0x34, 0x3f, 0x5b, 0xe4, 0x86, 0xd6, 0x58, 0xc8, 0xe3, 0xd8, 0x76, 0x4d, 0xfd, 0xd6, 0x8e, 0xfa, 0xce, 0x12},
+}
+
 // Test new BlockFiltercd .
 func Test_NewBlockFilter(t *testing.T) {
 	assert := assert.New(t)
@@ -32,6 +37,7 @@ func mockBlock() *types.Block {
 	blockchain.InitBlockChain(cfg, eventCenter)
 
 	bc, _ := blockchain.NewLatestStateBlockChain()
+	bc.WriteBlock(mockGenesisBlock)
 	b := &types.Block{
 		Header: &types.Header{
 			ChainID:       1,

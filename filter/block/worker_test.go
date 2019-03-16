@@ -159,8 +159,8 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 			GasLimit: uint64(65536),
 		}
 	})
-	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error) {
-		return addressA[:10], uint64(0), false, fmt.Errorf("Apply failed.")
+	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error, types.Address) {
+		return addressA[:10], uint64(0), false, fmt.Errorf("Apply failed."), types.Address{}
 	})
 	mockTrx := &types.Transaction{
 		Data: types.TxData{
@@ -179,8 +179,8 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	assert.Nil(receipit)
 	assert.Equal(uint64(0), gas)
 
-	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error) {
-		return addressA[:10], uint64(10), true, nil
+	monkey.Patch(ApplyTransaction, func(*evm.EVM, *types.Transaction, *workerc.GasPool) ([]byte, uint64, bool, error, types.Address) {
+		return addressA[:10], uint64(10), true, nil, types.Address{}
 	})
 
 	blockChain := worker.chain
@@ -202,7 +202,6 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	var usedGas = uint64(10)
 	signedTx, _ = wallett.SignTx(mockTrx, new(wallett.FrontierSigner), key)
 	receipit, gas, err = worker.VerifyTransaction(addressA, nil, nil, signedTx, &usedGas)
-	assert.Equal(addressNew, receipit.ContractAddress)
 	assert.Equal(uint64(10), gas)
 }
 
