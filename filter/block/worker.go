@@ -12,6 +12,7 @@ import (
 	"github.com/DSiSc/validator/tools/merkle_tree"
 	"github.com/DSiSc/validator/worker/common"
 	wallett "github.com/DSiSc/wallet/core/types"
+	"math/big"
 )
 
 type Worker struct {
@@ -179,7 +180,10 @@ func (self *Worker) GetReceipts() types.Receipts {
 }
 
 func (self *Worker) VerifyTrsSignature(tx *types.Transaction) bool {
-	signer := new(wallett.FrontierSigner)
+	id := 5777
+	chainId := int64(id)
+	signer := wallett.NewEIP155Signer(big.NewInt(chainId))
+	//signer := new(wallett.FrontierSigner)
 	from, err := wallett.Sender(signer, tx)
 	if nil != err {
 		log.Error("Get from by tx's %x signer failed with %v.", vcommon.TxHash(tx), err)

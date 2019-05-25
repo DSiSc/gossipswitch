@@ -7,6 +7,9 @@ import (
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	wallett "github.com/DSiSc/wallet/core/types"
+	"github.com/DSiSc/statedb-NG/util"
+	"math/big"
+	"github.com/DSiSc/justitia/config"
 )
 
 // TxFilter is an implemention of switch message filter,
@@ -38,7 +41,10 @@ func (txValidator *TxFilter) Verify(portId int, msg interface{}) error {
 // do verify operation
 func (txValidator *TxFilter) doVerify(tx *types.Transaction) error {
 	if txValidator.verifySignature {
-		signer := new(wallett.FrontierSigner)
+		id, _ := config.GetChainIdFromConfig()
+		chainId := int64(id)
+		signer := wallett.NewEIP155Signer(big.NewInt(chainId))
+		//signer := new(wallett.FrontierSigner)
 		from, err := wallett.Sender(signer, tx)
 		if nil != err {
 			log.Error("Get from by tx's signer failed with %v.", err)
@@ -47,7 +53,7 @@ func (txValidator *TxFilter) doVerify(tx *types.Transaction) error {
 			return err
 		}
 		if !bytes.Equal((*tx.Data.From)[:], from.Bytes()) {
-			log.Error("Transaction signature verify failed.")
+			log.Error("Transaction signature verify failed. from=%v, tx.data.from=%v, v=%v", from.String(), util.AddressToHex(*(tx.Data.From)), tx.Data.V)
 			err := fmt.Errorf("Transaction signature verify failed ")
 			txValidator.eventCenter.Notify(types.EventTxVerifyFailed, err)
 			return err
