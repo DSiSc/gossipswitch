@@ -2,12 +2,12 @@ package block
 
 import (
 	"errors"
-	"github.com/DSiSc/blockchain"
-	"github.com/DSiSc/blockchain/config"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/gossipswitch/filter"
 	"github.com/DSiSc/gossipswitch/port"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/repository"
+	"github.com/DSiSc/repository/config"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
@@ -30,13 +30,13 @@ func Test_NewBlockFilter(t *testing.T) {
 
 // mock block
 func mockBlock() *types.Block {
-	cfg := config.BlockChainConfig{
-		PluginName: blockchain.PLUGIN_MEMDB,
+	cfg := config.RepositoryConfig{
+		PluginName: repository.PLUGIN_MEMDB,
 	}
 	eventCenter := mockEventCenter()
-	blockchain.InitBlockChain(cfg, eventCenter)
+	repository.InitRepository(cfg, eventCenter)
 
-	bc, _ := blockchain.NewLatestStateBlockChain()
+	bc, _ := repository.NewLatestStateRespository()
 	bc.WriteBlock(mockGenesisBlock)
 	b := &types.Block{
 		Header: &types.Header{
@@ -82,7 +82,7 @@ func TestBlockFilter_Verify(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *Worker) types.Receipts {
 		return types.Receipts{}
 	})
-	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block, verifySignature bool) *Worker {
+	monkey.Patch(getValidateWorker, func(bc *repository.Repository, block *types.Block, verifySignature bool) *Worker {
 		return validateWorker
 	})
 	assert.Nil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify valid block")
@@ -113,7 +113,7 @@ func TestBlockFilter_Verify2(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(validateWorker), "GetReceipts", func(self *Worker) types.Receipts {
 		return types.Receipts{}
 	})
-	monkey.Patch(getValidateWorker, func(bc *blockchain.BlockChain, block *types.Block, verifySignature bool) *Worker {
+	monkey.Patch(getValidateWorker, func(bc *repository.Repository, block *types.Block, verifySignature bool) *Worker {
 		return validateWorker
 	})
 	assert.NotNil(blockFilter.Verify(port.LocalInPortId, block), "PASS: verify invalid block")

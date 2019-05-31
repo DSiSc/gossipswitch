@@ -2,11 +2,11 @@ package block
 
 import (
 	"fmt"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/crypto-suite/crypto"
 	"github.com/DSiSc/evm-NG"
 	"github.com/DSiSc/monkey"
+	"github.com/DSiSc/repository"
 	"github.com/DSiSc/validator/common"
 	"github.com/DSiSc/validator/tools"
 	workerc "github.com/DSiSc/validator/worker/common"
@@ -64,7 +64,7 @@ var mockHash1 = types.Hash{
 func TestWorker_VerifyBlock(t *testing.T) {
 	defer monkey.UnpatchAll()
 	assert := assert.New(t)
-	var blockChain *blockchain.BlockChain
+	var Repository *repository.Repository
 	var mockBlock = &types.Block{
 		Header: &types.Header{
 			ChainID:   uint64(1),
@@ -73,7 +73,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 		},
 	}
 	worker := NewWorker(nil, mockBlock, true)
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetBlockByHash", func(bc *blockchain.BlockChain, hash types.Hash) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "GetBlockByHash", func(bc *repository.Repository, hash types.Hash) (*types.Block, error) {
 		return &types.Block{
 			Header: &types.Header{
 				ChainID: uint64(0),
@@ -82,7 +82,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 	})
 	err := worker.VerifyBlock()
 	assert.NotNil(err, "chain id not consistent")
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetBlockByHash", func(bc *blockchain.BlockChain, hash types.Hash) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "GetBlockByHash", func(bc *repository.Repository, hash types.Hash) (*types.Block, error) {
 		return &types.Block{
 			Header: &types.Header{
 				ChainID: uint64(1),
@@ -94,7 +94,7 @@ func TestWorker_VerifyBlock(t *testing.T) {
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "Block pre block hash not consistent")
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetBlockByHash", func(bc *blockchain.BlockChain, hash types.Hash) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "GetBlockByHash", func(bc *repository.Repository, hash types.Hash) (*types.Block, error) {
 		return &types.Block{
 			Header: &types.Header{
 				ChainID: uint64(1),
@@ -130,15 +130,15 @@ func TestWorker_VerifyBlock(t *testing.T) {
 	assert.NotNil(err, "Receipts hash not consistent")
 
 	worker.block.Header.ReceiptsRoot = tmp
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "IntermediateRoot", func(*blockchain.BlockChain, bool) types.Hash {
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "IntermediateRoot", func(*repository.Repository, bool) types.Hash {
 		return types.Hash{}
 	})
 	err = worker.VerifyBlock()
 	assert.NotNil(err, "state root is inconsistent")
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "IntermediateRoot", func(*blockchain.BlockChain, bool) types.Hash {
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "IntermediateRoot", func(*repository.Repository, bool) types.Hash {
 		return MockHash
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetBlockByHash", func(bc *blockchain.BlockChain, hash types.Hash) (*types.Block, error) {
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "GetBlockByHash", func(bc *repository.Repository, hash types.Hash) (*types.Block, error) {
 		return &types.Block{
 			Header: &types.Header{
 				ChainID: uint64(1),
@@ -154,7 +154,7 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 	assert := assert.New(t)
 	worker := NewWorker(nil, nil, true)
 
-	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *blockchain.BlockChain, types.Address) evm.Context {
+	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *repository.Repository, types.Address) evm.Context {
 		return evm.Context{
 			GasLimit: uint64(65536),
 		}
@@ -183,17 +183,17 @@ func TestWorker_VerifyTransaction(t *testing.T) {
 		return addressA[:10], uint64(10), true, nil, types.Address{}
 	})
 
-	blockChain := worker.chain
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "IntermediateRoot", func(*blockchain.BlockChain, bool) types.Hash {
+	Repository := worker.chain
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "IntermediateRoot", func(*repository.Repository, bool) types.Hash {
 		return MockHash
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(blockChain), "GetLogs", func(*blockchain.BlockChain, types.Hash) []*types.Log {
+	monkey.PatchInstanceMethod(reflect.TypeOf(Repository), "GetLogs", func(*repository.Repository, types.Hash) []*types.Log {
 		return make([]*types.Log, 0)
 	})
 	monkey.Patch(crypto.CreateAddress, func(types.Address, uint64) types.Address {
 		return addressNew
 	})
-	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *blockchain.BlockChain, types.Address) evm.Context {
+	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *repository.Repository, types.Address) evm.Context {
 		return evm.Context{
 			GasLimit: uint64(65536),
 		}

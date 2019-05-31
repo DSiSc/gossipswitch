@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/DSiSc/blockchain"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	common "github.com/DSiSc/gossipswitch/filter"
+	"github.com/DSiSc/repository"
 	"sync"
 )
 
@@ -63,7 +63,7 @@ func (filter *BlockFilter) doValidate(block *types.Block) error {
 
 	// retrieve previous world state
 	preBlkHash := block.Header.PrevBlockHash
-	bc, err := blockchain.NewBlockChainByBlockHash(preBlkHash)
+	bc, err := repository.NewRepositoryByBlockHash(preBlkHash)
 	if err != nil {
 		log.Error("Failed to validate previous block, as: %v", err)
 		err := fmt.Errorf("failed to get previous block state, as:%v", err)
@@ -94,6 +94,6 @@ func (filter *BlockFilter) doValidate(block *types.Block) error {
 }
 
 // get validate worker by previous world state and block
-func getValidateWorker(bc *blockchain.BlockChain, block *types.Block, verifySignature bool) *Worker {
+func getValidateWorker(bc *repository.Repository, block *types.Block, verifySignature bool) *Worker {
 	return NewWorker(bc, block, verifySignature)
 }
