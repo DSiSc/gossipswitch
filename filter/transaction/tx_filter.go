@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
-	wallett "github.com/DSiSc/wallet/core/types"
 	"github.com/DSiSc/statedb-NG/util"
+	wallett "github.com/DSiSc/wallet/core/types"
 	"math/big"
-	"github.com/DSiSc/justitia/config"
 )
 
 // TxFilter is an implemention of switch message filter,
@@ -17,13 +16,15 @@ import (
 type TxFilter struct {
 	eventCenter     types.EventCenter
 	verifySignature bool
+	chainId         uint64
 }
 
 // create a new transaction filter instance.
-func NewTxFilter(eventCenter types.EventCenter, verifySignature bool) *TxFilter {
+func NewTxFilter(eventCenter types.EventCenter, verifySignature bool, chainId uint64) *TxFilter {
 	return &TxFilter{
 		eventCenter:     eventCenter,
 		verifySignature: verifySignature,
+		chainId:         chainId,
 	}
 }
 
@@ -41,9 +42,7 @@ func (txValidator *TxFilter) Verify(portId int, msg interface{}) error {
 // do verify operation
 func (txValidator *TxFilter) doVerify(tx *types.Transaction) error {
 	if txValidator.verifySignature {
-		id, _ := config.GetChainIdFromConfig()
-		chainId := int64(id)
-		signer := wallett.NewEIP155Signer(big.NewInt(chainId))
+		signer := wallett.NewEIP155Signer(big.NewInt(int64(txValidator.chainId)))
 		//signer := new(wallett.FrontierSigner)
 		from, err := wallett.Sender(signer, tx)
 		if nil != err {
