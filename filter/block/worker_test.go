@@ -152,7 +152,14 @@ func TestWorker_VerifyBlock(t *testing.T) {
 func TestWorker_VerifyTransaction(t *testing.T) {
 	defer monkey.UnpatchAll()
 	assert := assert.New(t)
-	worker := NewWorker(nil, nil, true)
+	var mockBlock = &types.Block{
+		Header: &types.Header{
+			ChainID:   uint64(1),
+			Height:    uint64(1),
+			StateRoot: MockHash,
+		},
+	}
+	worker := NewWorker(nil, mockBlock, true)
 
 	monkey.Patch(evm.NewEVMContext, func(types.Transaction, *types.Header, *repository.Repository, types.Address) evm.Context {
 		return evm.Context{

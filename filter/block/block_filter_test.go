@@ -36,7 +36,7 @@ func mockBlock() *types.Block {
 	eventCenter := mockEventCenter()
 	repository.InitRepository(cfg, eventCenter)
 
-	bc, _ := repository.NewLatestStateRespository()
+	bc, _ := repository.NewLatestStateRepository()
 	bc.WriteBlock(mockGenesisBlock)
 	b := &types.Block{
 		Header: &types.Header{
