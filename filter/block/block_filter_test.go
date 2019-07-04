@@ -2,6 +2,7 @@ package block
 
 import (
 	"errors"
+	"fmt"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/gossipswitch/filter"
 	"github.com/DSiSc/gossipswitch/port"
@@ -16,7 +17,7 @@ import (
 
 var mockGenesisBlock = &types.Block{
 	Header:     &types.Header{},
-	HeaderHash: types.Hash{0xbc, 0xf1, 0xf4, 0x1f, 0xa1, 0x28, 0x66, 0x3d, 0x05, 0x98, 0x1e, 0xf1, 0x55, 0x9e, 0x34, 0x3f, 0x5b, 0xe4, 0x86, 0xd6, 0x58, 0xc8, 0xe3, 0xd8, 0x76, 0x4d, 0xfd, 0xd6, 0x8e, 0xfa, 0xce, 0x12},
+	HeaderHash: types.Hash{3, 49, 241, 97, 138, 50, 185, 45, 132, 133, 5, 202, 149, 143, 173, 115, 217, 157, 249, 3, 209, 105, 249, 224, 200, 68, 60, 171, 249, 207, 130, 153},
 }
 
 // Test new BlockFiltercd .
@@ -51,6 +52,7 @@ func mockBlock() *types.Block {
 		},
 	}
 	b.Header.PrevBlockHash = filter.HeaderHash(bc.GetCurrentBlock())
+	fmt.Println(filter.HeaderHash(mockGenesisBlock))
 	b.HeaderHash = filter.HeaderHash(b)
 	return b
 }
