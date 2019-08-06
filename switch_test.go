@@ -1,11 +1,14 @@
 package gossipswitch
 
 import (
+	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/gossipswitch/config"
 	"github.com/DSiSc/gossipswitch/port"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
+	"errors"
 )
 
 // mock switch filter
@@ -103,27 +106,28 @@ func Test_onRecvMsg(t *testing.T) {
 	// bind output func to switch out port
 	outPort := sw.OutPort(port.LocalOutPortId)
 	outPort.BindToPort(func(msg interface{}) error {
+		log.Info("received a message")
 		recvMsgChan <- msg
 		return nil
 	})
 
-	recvMsg := <-recvMsgChan
-	if recvMsg != txMsg {
-		t.Error("FAILED: failed to receive the message")
+	ticker := time.NewTicker(2 * time.Second)
+	select {
+	case recvMsg := <-recvMsgChan:
+		assert.Equal(txMsg, recvMsg)
+	case <-ticker.C:
+		assert.Nil(errors.New("failed to receive message"))
+
 	}
-	t.Log("PASS: succed receiving the message")
 }
 
 // check switch status
 func checkSwitchStatus(t *testing.T, err error, currentStatus uint32, expectStatus uint32) {
-	if err != nil || currentStatus != expectStatus {
-		t.Error("FAILED: switch current status is not the expected status.")
-		panic("switch current status is not the expected status.")
-	}
+	assert.Equal(t, expectStatus, currentStatus)
 	if currentStatus == 0 {
-		t.Log("PASS: succed stopping switch")
+		log.Info("PASS: succed stopping switch")
 	} else {
-		t.Log("PASS: succed starting switch")
+		log.Error("PASS: succed starting switch")
 	}
 }
 
