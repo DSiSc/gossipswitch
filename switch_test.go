@@ -1,6 +1,7 @@
 package gossipswitch
 
 import (
+	"errors"
 	"github.com/DSiSc/craft/log"
 	"github.com/DSiSc/craft/types"
 	"github.com/DSiSc/gossipswitch/config"
@@ -8,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-	"errors"
 )
 
 // mock switch filter
@@ -98,10 +98,6 @@ func Test_onRecvMsg(t *testing.T) {
 
 	checkSwitchStatus(t, sw.Start(), sw.isRunning, 1)
 
-	//send message to switch
-	txMsg := &types.Transaction{}
-	sw.InPort(port.LocalInPortId).Channel() <- txMsg
-
 	recvMsgChan := make(chan interface{})
 	// bind output func to switch out port
 	outPort := sw.OutPort(port.LocalOutPortId)
@@ -110,6 +106,10 @@ func Test_onRecvMsg(t *testing.T) {
 		recvMsgChan <- msg
 		return nil
 	})
+
+	//send message to switch
+	txMsg := &types.Transaction{}
+	sw.InPort(port.LocalInPortId).Channel() <- txMsg
 
 	ticker := time.NewTicker(2 * time.Second)
 	select {

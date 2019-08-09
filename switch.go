@@ -17,7 +17,6 @@ import (
 // SwitchType switch type
 type SwitchType int
 
-const workerPoolSize = 100
 const (
 	TxSwitch SwitchType = iota
 	BlockSwitch
@@ -33,6 +32,7 @@ type GossipSwitch struct {
 	outPorts  map[int]*port.OutPort
 	isRunning uint32 // atomic
 	pool      *grpool.Pool
+	poolSize  int
 }
 
 // NewGossipSwitch create a new switch instance with given filter.
@@ -42,6 +42,7 @@ func NewGossipSwitch(filter filter.SwitchFilter) *GossipSwitch {
 		filter:   filter,
 		inPorts:  make(map[int]*port.InPort),
 		outPorts: make(map[int]*port.OutPort),
+		poolSize: 50,
 	}
 	sw.initPort()
 	return sw
@@ -66,6 +67,7 @@ func NewGossipSwitchByType(switchType SwitchType, eventCenter types.EventCenter,
 		filter:   msgFilter,
 		inPorts:  make(map[int]*port.InPort),
 		outPorts: make(map[int]*port.OutPort),
+		poolSize: switchConfig.WorkerPoolSize,
 	}
 	sw.initPort()
 	return sw, nil
@@ -98,7 +100,7 @@ func (sw *GossipSwitch) Start() error {
 	log.Info("Begin starting switch")
 
 	// create worker pool.
-	sw.pool = grpool.NewPool(workerPoolSize, workerPoolSize/2)
+	sw.pool = grpool.NewPool(sw.poolSize, sw.poolSize/2)
 
 	if atomic.CompareAndSwapUint32(&sw.isRunning, 0, 1) {
 		for _, inPort := range sw.inPorts {
@@ -114,10 +116,6 @@ func (sw *GossipSwitch) Start() error {
 // Stop stop the switch. Once stopped, switch will stop to receive and broadcast message
 func (sw *GossipSwitch) Stop() error {
 	log.Info("Begin stopping switch")
-	for _, outPort := range sw.outPorts {
-		outPort.Close()
-	}
-
 	sw.pool.Release()
 	if atomic.CompareAndSwapUint32(&sw.isRunning, 1, 0) {
 		log.Info("Stop switch success")
