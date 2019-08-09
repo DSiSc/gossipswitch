@@ -82,7 +82,7 @@ func TestOutPort_Write(t *testing.T) {
 	outPort.BindToPort(outPutFunc)
 
 	sendMsg := &types.Transaction{}
-	outPort.Write(sendMsg)
+	go outPort.Write(sendMsg)
 
 	recvMsg := <-recvMsgChan
 	assert.Equal(recvMsg, sendMsg, "FAILED: failed to Write message to OutPort")
