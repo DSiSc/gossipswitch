@@ -9,6 +9,7 @@ import (
 	"github.com/DSiSc/gossipswitch/filter/block"
 	"github.com/DSiSc/gossipswitch/filter/transaction"
 	"github.com/DSiSc/gossipswitch/port"
+	"github.com/ivpusic/grpool"
 	"sync"
 	"sync/atomic"
 )
@@ -16,6 +17,7 @@ import (
 // SwitchType switch type
 type SwitchType int
 
+const workerPoolSize = 100
 const (
 	TxSwitch SwitchType = iota
 	BlockSwitch
@@ -30,6 +32,7 @@ type GossipSwitch struct {
 	inPorts   map[int]*port.InPort
 	outPorts  map[int]*port.OutPort
 	isRunning uint32 // atomic
+	pool      *grpool.Pool
 }
 
 // NewGossipSwitch create a new switch instance with given filter.
@@ -93,6 +96,10 @@ func (sw *GossipSwitch) OutPort(portId int) *port.OutPort {
 // out port
 func (sw *GossipSwitch) Start() error {
 	log.Info("Begin starting switch")
+
+	// create worker pool.
+	sw.pool = grpool.NewPool(workerPoolSize, workerPoolSize/2)
+
 	if atomic.CompareAndSwapUint32(&sw.isRunning, 0, 1) {
 		for _, inPort := range sw.inPorts {
 			go sw.receiveRoutine(inPort)
@@ -107,6 +114,11 @@ func (sw *GossipSwitch) Start() error {
 // Stop stop the switch. Once stopped, switch will stop to receive and broadcast message
 func (sw *GossipSwitch) Stop() error {
 	log.Info("Begin stopping switch")
+	for _, outPort := range sw.outPorts {
+		outPort.Close()
+	}
+
+	sw.pool.Release()
 	if atomic.CompareAndSwapUint32(&sw.isRunning, 1, 0) {
 		log.Info("Stop switch success")
 		return nil
@@ -145,9 +157,13 @@ func (sw *GossipSwitch) onRecvMsg(portId int, msg interface{}) {
 
 // broadcast the validated message to all out ports.
 func (sw *GossipSwitch) broadCastMsg(msg interface{}) error {
-	log.Debug("Broadcast message %v to port.OutPorts", msg)
+	//log.Debug("Broadcast message %v to port.OutPorts", msg)
 	for _, outPort := range sw.outPorts {
-		go outPort.Write(msg)
+		o := outPort
+		m := msg
+		sw.pool.JobQueue <- func() {
+			o.Write(m)
+		}
 	}
 	return nil
 }

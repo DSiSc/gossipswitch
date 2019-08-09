@@ -2,8 +2,11 @@ package port
 
 import (
 	"github.com/DSiSc/craft/log"
+	"github.com/ivpusic/grpool"
 	"sync"
 )
+
+const workerPoolSize = 100
 
 // common const value
 const (
@@ -59,6 +62,7 @@ type OutPort struct {
 	outPortMtx  sync.Mutex
 	state       state
 	outPutFuncs []OutPutFunc
+	pool        *grpool.Pool
 }
 
 // create a new out port instance
@@ -66,6 +70,7 @@ func NewOutPort(id int) *OutPort {
 	return &OutPort{
 		id:    id,
 		state: state{},
+		pool:  grpool.NewPool(workerPoolSize, workerPoolSize/2),
 	}
 }
 
@@ -88,7 +93,17 @@ func (outPort *OutPort) Write(msg interface{}) error {
 	outPort.outPortMtx.Lock()
 	defer outPort.outPortMtx.Unlock()
 	for _, outPutFunc := range outPort.outPutFuncs {
-		go outPutFunc(msg)
+		of := outPutFunc
+		m := msg
+		outPort.pool.JobQueue <- func() {
+			of(m)
+		}
 	}
 	return nil
+}
+
+// Close close the out port
+func (outPort *OutPort) Close() {
+	log.Info("Close the out port %v", outPort.id)
+	outPort.pool.Release()
 }
