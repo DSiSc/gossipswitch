@@ -2,7 +2,6 @@ package port
 
 import (
 	"github.com/DSiSc/craft/log"
-	"github.com/ivpusic/grpool"
 	"sync"
 )
 
@@ -60,7 +59,6 @@ type OutPort struct {
 	outPortMtx  sync.Mutex
 	state       state
 	outPutFuncs []OutPutFunc
-	pool        *grpool.Pool
 }
 
 // create a new out port instance
